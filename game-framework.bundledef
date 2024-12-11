@@ -1,0 +1,11 @@
+{
+  "enabled": true,
+  "globalName": "gFramework",
+  "allowLoadInEditor": true,
+  "allowLoadInRuntime": true,
+  "autoLoad": true,
+  "entries": [],
+  "includeAllFiles": true,
+  "loadBeforeMain": true,
+  "bundleExternals": false
+}
