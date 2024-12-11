@@ -1,4 +1,4 @@
-import { IPoolable, poolMgr, PromiseDeferer, promiseUtil, regPool } from "../misc";
+import { IPoolable, myGlobal, poolMgr, PromiseDeferer, promiseUtil, regPool } from "../misc";
 import { ResInfo } from './ResInfo';
 
 export class ResMgr {
@@ -13,7 +13,7 @@ export class ResMgr {
         return this._pendings.get(url)?.isPending ?? false;
     }
 
-    async load<K extends ResTypes = 'any'>(url: string, type?: K): Promise<K extends 'any' ? gFrameworkDef.IResInfo : gFrameworkDef.IGenericResInfo<ResTypeMapping[K]>>
+    async load<K extends ResTypeKey = 'any'>(url: string, type?: K): Promise<K extends 'any' ? gFrameworkDef.IResInfo : gFrameworkDef.IGenericResInfo<ResTypeMapping[K]>>
     {
         let resInfo: gFrameworkDef.IResInfo;
         do {
@@ -27,7 +27,7 @@ export class ResMgr {
         return resInfo as any;
     }
 
-    private _confirmRequest(url: string, resType: ResTypes) {
+    private _confirmRequest(url: string, resType: ResTypeKey) {
         let req = this._pendings.get(url);
         if (!req) {
             this._pendings.set(
@@ -46,7 +46,7 @@ export class ResMgr {
         return req;
     }
 
-    private _setResInfo(url: string, resType: ResTypes, resInfo: gFrameworkDef.IResInfo) {
+    private _setResInfo(url: string, resType: ResTypeKey, resInfo: gFrameworkDef.IResInfo) {
         this._resInfos.set(url, resInfo);
     }
 }
@@ -67,15 +67,16 @@ type ResTypeMapping = {
     'MATERIAL': Laya.Material,
     'TEXTURE2D': Laya.Texture2D,
     'TEXTURECUBE': Laya.TextureCube,
-    'SPINE': Laya.SpineTemplet
+    'SPINE': Laya.SpineTemplet,
+    'json': Laya.TextResource
 }
 
-type ResTypes = (keyof ResTypeMapping)&(keyof typeof Laya.Loader)|'any';
+type ResTypeKey = (keyof ResTypeMapping)&(keyof typeof Laya.Loader)|'any';
 
 @regPool
 class ResRequest implements IPoolable {
     private _url: string;
-    private _resType: ResTypes;
+    private _resType: ResTypeKey;
     private _pendingType: 'initial'|'pending'|'ok'|'failed' = 'initial';
     private _defer: PromiseDeferer<gFrameworkDef.IResInfo>;
 
@@ -83,9 +84,9 @@ class ResRequest implements IPoolable {
     get isPending() { return this._pendingType === 'initial'; }
     get loaded() { return this._defer.promise; }
 
-    setup(url: string, resType: ResTypes = 'any') {
+    setup(url: string, typeKey: ResTypeKey = 'any') {
         this._url = url;
-        this._resType = resType;
+        this._resType = typeKey;
         this._pendingType = 'initial';
         this._defer = promiseUtil.createDefer();
         return this;
@@ -124,3 +125,4 @@ class ResRequest implements IPoolable {
 }
 
 export const resMgr = new ResMgr();
+myGlobal.set('resMgr', resMgr);
