@@ -13,17 +13,17 @@ export class ResMgr {
         return this._pendings.get(url)?.isPending ?? false;
     }
 
-    async load<K extends ResTypeKey = 'any'>(url: string, type?: K): Promise<K extends 'any' ? gFrameworkDef.IResInfo : gFrameworkDef.IGenericResInfo<ResTypeMapping[K]>>
-    {
+    async load<T extends ResTypes|undefined = undefined>(url: string): Promise<T extends undefined ? gFrameworkDef.IResInfo : gFrameworkDef.IGenericResInfo<T>>;
+    async load<K extends ResTypeKey = 'undefined'>(url: string, type: K): Promise<K extends 'any' ? gFrameworkDef.IResInfo : gFrameworkDef.IGenericResInfo<ResTypeMapping[K]>>;
+    async load(url: string, type: ResTypeKey = 'undefined'): Promise<gFrameworkDef.IResInfo> {
         let resInfo: gFrameworkDef.IResInfo;
         do {
             resInfo = this._resInfos.get(url);
             if (!!resInfo)
                 break;
-            const pending = this._confirmRequest(url, type ?? 'any');
-            resInfo = await pending.loaded as gFrameworkDef.IResInfo;
+            const pending = this._confirmRequest(url, type ?? 'undefined');
+            resInfo = await pending.loaded;
         } while (false);
-
         return resInfo as any;
     }
 
@@ -52,7 +52,7 @@ export class ResMgr {
 }
 
 type ResTypeMapping = {
-    'any': any,
+    'undefined': undefined,
     'TEXT': Laya.TextResource,
     'JSON': Laya.TextResource,
     'XML': Laya.TextResource,
@@ -67,11 +67,11 @@ type ResTypeMapping = {
     'MATERIAL': Laya.Material,
     'TEXTURE2D': Laya.Texture2D,
     'TEXTURECUBE': Laya.TextureCube,
-    'SPINE': Laya.SpineTemplet,
-    'json': Laya.TextResource
+    'SPINE': Laya.SpineTemplet
 }
 
-type ResTypeKey = (keyof ResTypeMapping)&(keyof typeof Laya.Loader)|'any';
+type ResTypeKey = (keyof ResTypeMapping)&(keyof typeof Laya.Loader)|'undefined';
+type ResTypes = ResTypeMapping[keyof Omit<ResTypeMapping, 'undefined'>];
 
 @regPool
 class ResRequest implements IPoolable {
@@ -84,7 +84,7 @@ class ResRequest implements IPoolable {
     get isPending() { return this._pendingType === 'initial'; }
     get loaded() { return this._defer.promise; }
 
-    setup(url: string, typeKey: ResTypeKey = 'any') {
+    setup(url: string, typeKey: ResTypeKey = 'undefined') {
         this._url = url;
         this._resType = typeKey;
         this._pendingType = 'initial';
@@ -102,7 +102,7 @@ class ResRequest implements IPoolable {
         try {
             const res = await Laya.loader.load(
                 this._url,
-                this._resType === 'any' ? void 0 : (Laya.Loader[this._resType] ?? void 0)
+                this._resType === 'undefined' ? void 0 : (Laya.Loader[this._resType] ?? void 0)
             );
             this._defer.resolve(ResInfo.createInfo(res));
         } catch (e) {
