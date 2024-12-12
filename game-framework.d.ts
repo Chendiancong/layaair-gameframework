@@ -5,8 +5,14 @@ declare namespace gFrameworkDef {
     type ResLoadingState = 'initial'|'pending'|'loaded'|'failure';
 
     interface IResInfo {
+        /** 资源的url */
+        readonly resUrl: string;
         /** 当前的引用计数 */
         readonly refCount: number;
+        /** 是否有效 */
+        readonly isValid: boolean;
+        /** 资源销毁回调 */
+        readonly postDestroy: import('./misc').IDelegate<(info: IResInfo) => void>;
         /** 增加引用 */
         addRef(...args: Parameters<Laya.Resource['_addReference']>): void;
         /** 减少引用 */

@@ -1,5 +1,6 @@
 import { IPoolable, myGlobal, poolMgr, PromiseDeferer, promiseUtil, regPool } from "../misc";
 import { ResInfo } from './ResInfo';
+import { ResKeeper } from "./ResKeeper";
 
 export class ResMgr {
     private _resInfos = new Map<string, gFrameworkDef.IResInfo>();
@@ -27,6 +28,30 @@ export class ResMgr {
         return resInfo as any;
     }
 
+    instantiate<T extends Laya.Node = Laya.Node>(resInfo: gFrameworkDef.IGenericResInfo<Laya.Prefab>, ...args: Parameters<Laya.Prefab['create']>): T {
+        return this._internalInstantiate(resInfo, ...args) as T;
+    }
+
+    async quickInstantiate<T extends Laya.Node = Laya.Node>(url: string, ...args: Parameters<Laya.Prefab['create']>): Promise<T> {
+        const resInfo = await this.load(url);
+        return this._internalInstantiate(resInfo, ...args) as T;
+    }
+
+    private _internalInstantiate(resInfo: gFrameworkDef.IResInfo, ...args: Parameters<Laya.Prefab['create']>) {
+        if (!resInfo.isValid) {
+            console.warn('not valid res when instantiate');
+            return void 0;
+        }
+        const res = resInfo.getRes();
+        if (!(res instanceof Laya.Prefab)) {
+            console.warn('must instantiate using prefab');
+            return void 0;
+        }
+        const node = res.create(...args);
+        ResKeeper.register(resInfo, node);
+        return node;
+    }
+
     private _confirmRequest(url: string, resType: ResTypeKey) {
         let req = this._pendings.get(url);
         if (!req) {
@@ -48,6 +73,11 @@ export class ResMgr {
 
     private _setResInfo(url: string, resType: ResTypeKey, resInfo: gFrameworkDef.IResInfo) {
         this._resInfos.set(url, resInfo);
+        resInfo.postDestroy.addOnce(this._onResDestroy, this);
+    }
+
+    private _onResDestroy(resInfo: gFrameworkDef.IResInfo) {
+        this._resInfos.delete(resInfo.resUrl);
     }
 }
 
@@ -100,11 +130,12 @@ class ResRequest implements IPoolable {
             return;
         this._pendingType = 'pending';
         try {
+            const url = this._url;
             const res = await Laya.loader.load(
                 this._url,
                 this._resType === 'undefined' ? void 0 : (Laya.Loader[this._resType] ?? void 0)
             );
-            this._defer.resolve(ResInfo.createInfo(res));
+            this._defer.resolve(ResInfo.createInfo(url, res));
         } catch (e) {
             this._pendingType = 'failed';
         }

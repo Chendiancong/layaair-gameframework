@@ -2,10 +2,10 @@ const that = this;
 
 export const myGlobal = new class MyGlobal {
     private _globalThis: any;
-    private _thiz: Record<string, any> = {};
+    private _record: Record<string, any> = {};
 
-    get thiz() {
-        return this._thiz as Readonly<MyGlobal['_thiz']>;
+    get record() {
+        return this._record as Readonly<MyGlobal['_record']>;
     }
 
     get globalThis() {
@@ -26,11 +26,11 @@ export const myGlobal = new class MyGlobal {
     }
 
     set(key: string, val: any) {
-        this._thiz[key] = val;
+        this._record[key] = val;
     }
 
     get(key: string) {
-        return this._thiz[key];
+        return this._record[key];
     }
 }
 

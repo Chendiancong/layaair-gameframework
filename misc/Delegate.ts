@@ -5,12 +5,21 @@ export class Delegate<T extends (...args: any[]) => void> implements IDelegate<T
     private _handlers: DelegateHandler[] = [];
 
     add(func: T, caller?: any) {
-        const cur = jsUtil.arrayFind(
+        this._add(func, caller, false);
+    }
+
+    addOnce(func: T, caller?: any) {
+        this._add(func, caller, true);
+    }
+
+    private _add(func: T, caller: any, isOnce: boolean) {
+        let cur = jsUtil.arrayFind(
             this._handlers,
             val => val.isSame(func, caller)
         );
         if (!cur)
-            this._handlers.push(poolMgr.getItem(DelegateHandler).setup(func, caller));
+            this._handlers.push(cur = poolMgr.getItem(DelegateHandler));
+        cur.setup(func, caller, isOnce);
     }
 
     del(func: T, caller?: any) {
@@ -57,6 +66,7 @@ export class Delegate<T extends (...args: any[]) => void> implements IDelegate<T
 
 export interface IDelegate<T extends (...args: any[]) => void = (...args: any[]) => void> {
     add(func: T, caller?: any): void;
+    addOnce(func: T, caller?: any): void;
     del(func: T, caller?: any): void;
     clear(caller?: any): void;
     invoke(...args: Parameters<T>): void;
@@ -79,15 +89,16 @@ export function delegatify(clazzOrProto: any, propName: string) {
 @regPool
 class DelegateHandler implements gFrameworkDef.IEqualable<DelegateHandler>, IPoolable {
     handler: Function;
-    caller?: any;
+    caller: any;
+    isOnce: boolean;
 
     invoke(...args: any[]) {
         this.handler.call(this.caller, ...args);
     }
 
-    isSame(handler: Function, caller?: any) {
+    isSame(handler: Function, caller: any) {
         return this.handler === handler &&
-            this.caller == caller;
+            this.caller == caller
     }
 
     isSameCaller(caller: any) {
@@ -98,9 +109,10 @@ class DelegateHandler implements gFrameworkDef.IEqualable<DelegateHandler>, IPoo
         return this.isSame(other.handler, other.caller);
     }
 
-    setup(handler: Function, caller?: any) {
+    setup(handler: Function, caller: any, isOnce: boolean) {
         this.handler = handler;
         this.caller = caller;
+        this.isOnce = isOnce;
         return this;
     }
     
@@ -111,10 +123,10 @@ class DelegateHandler implements gFrameworkDef.IEqualable<DelegateHandler>, IPoo
     pool_onRestore() {
         this.handler = void 0;
         this.caller = void 0;
+        this.isOnce = false;
     }
 
     pool_onDestroy() {
-        this.handler = void 0;
-        this.caller = void 0;
+        this.pool_onRestore();
     }
 }
