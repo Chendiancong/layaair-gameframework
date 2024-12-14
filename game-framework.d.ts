@@ -1,6 +1,10 @@
 declare namespace gFrameworkDef {
     type Constructor<T = any> = { new(...args: any[]): T };
     type ConstructorParameters<T extends gFrameworkDef.Constructor> = T extends { new(...args: infer R): any } ? R : any[];
+    type KeyWithType<T, U, K extends string = keyof T> = K extends keyof T ? T[K] extends U ? K : never : never;
+    type KeyWithoutType<T, U, K extends string  = keyof T> = K extends keyof T ? T[K] extends T ? never : K : never;
+    type WithType<T, U> = { [K in KeyWithType<T, U>]: T[K] };
+    type WithoutType<T, U> = { [K in KeyWithoutType<T, U>]: T[K] };
 
     type ResLoadingState = 'initial'|'pending'|'loaded'|'failure';
 
@@ -40,5 +44,9 @@ declare namespace gFrameworkDef {
 
     interface IEqualable<T> {
         equals(other: T): boolean;
+    }
+
+    interface ITickable {
+        tick(dt: number): void;
     }
 }

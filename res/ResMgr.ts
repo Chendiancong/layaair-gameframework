@@ -4,15 +4,15 @@ import { ResKeeper } from "./ResKeeper";
 
 export class ResMgr {
     getRes<T extends ResTypes = void>(url: string): T extends void ? any : T;
-    getRes<K extends ResTypeKey = 'UNKNOWN'>(url: string, type: K): K extends 'UNKNOWN' ? any : ResTypeMapping[K];
-    getRes(url: string, type: ResTypeKey = 'UNKNOWN'): Promise<any> {
+    getRes<K extends ResTypeKey = 'unknown'>(url: string, type: K): K extends 'unknown' ? any : ResTypeMapping[K];
+    getRes(url: string, type: ResTypeKey = 'unknown'): Promise<any> {
         return Laya.loader.getRes(url, type)
     }
 
     async load<T extends ResTypes = void>(url: string): Promise<T extends void ? any : T>;
-    async load<K extends ResTypeKey = 'UNKNOWN'>(url: string, type: K): Promise<K extends 'UNKNOWN' ? any : ResTypeMapping[K]>;
-    async load(url: string, type: ResTypeKey = 'UNKNOWN'): Promise<any> {
-        return await Laya.loader.load(url, type === 'UNKNOWN' ? void 0 : type);
+    async load<K extends ResTypeKey = 'unknown'>(url: string, type: K): Promise<K extends 'unknown' ? any : ResTypeMapping[K]>;
+    async load(url: string, type: ResTypeKey = 'unknown'): Promise<any> {
+        return await Laya.loader.load(url, type === 'unknown' ? void 0 : type);
     }
 
     instantiate<T extends Laya.Node = Laya.Node>(res: Laya.Prefab, ...args: Parameters<Laya.Prefab['create']>) {
@@ -23,7 +23,7 @@ export class ResMgr {
 }
 
 type ResTypeMapping = {
-    'UNKNOWN': void,
+    'unknown': void,
     'TEXT': Laya.TextResource,
     'JSON': Laya.TextResource,
     'XML': Laya.TextResource,
@@ -41,7 +41,7 @@ type ResTypeMapping = {
     'SPINE': Laya.SpineTemplet
 }
 
-type ResTypeKey = (keyof ResTypeMapping)&(keyof typeof Laya.Loader)|'UNKNOWN';
+type ResTypeKey = (keyof ResTypeMapping)&(keyof typeof Laya.Loader)|'unknown';
 type ResTypes = ResTypeMapping[keyof ResTypeMapping];
 
 export const resMgr = new ResMgr();
