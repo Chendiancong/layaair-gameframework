@@ -3,6 +3,8 @@ import { worldUtils } from "./WorldUtils";
 
 export class WorldEntity {
     private _components: WorldComponent[] = [];
+    private _toStartComponents: WorldComponent[] = [];
+    private _runningComponents: WorldComponent[] = [];
 
     get components(): ReadonlyArray<WorldComponent> {
         return this._components;
@@ -25,6 +27,12 @@ export class WorldEntity {
                 this._components.push(comp);
         }
         return comp;
+    }
+
+    /**
+     * @deprecated internal
+     */
+    internalTick(dt: number): void {
     }
 
     private _createComponent(nameOrCtor: string|gFrameworkDef.Constructor<WorldComponent>): WorldComponent {

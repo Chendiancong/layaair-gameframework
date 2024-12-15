@@ -1,4 +1,4 @@
-interface ILifeCycle {
+interface IComponentLifeCycle {
     /** 是否激活 */
     enabled: boolean;
 
@@ -16,7 +16,7 @@ interface ILifeCycle {
     onDestroy?(): void;
 }
 
-export class WorldComponent implements ILifeCycle {
+export class WorldComponent implements IComponentLifeCycle {
     private _enabled: boolean;
 
     get enabled() { return this._enabled; }
@@ -34,7 +34,7 @@ export class WorldComponent implements ILifeCycle {
     onDisable?(): void;
     onDestroy?(): void;
 
-    protected invokeLifeCycle<K extends gFrameworkDef.KeyWithType<ILifeCycle, Function>>(funName: K, ...args: Parameters<ILifeCycle[K]>) {
+    protected invokeLifeCycle<K extends gFrameworkDef.KeyWithType<IComponentLifeCycle, Function>>(funName: K, ...args: Parameters<IComponentLifeCycle[K]>) {
         (Object.getPrototypeOf(this)[funName] as Function).call(this, ...args);
     }
 }

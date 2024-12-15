@@ -25,8 +25,11 @@ export const worldUtils = new class {
     getCompInfo(arg0: string|gFrameworkDef.Constructor): ComponentInfo {
         if (typeof arg0 === 'string')
             return this.getCompInfoByName(arg0);
-        else
-            return this.getCompInfoByName((arg0 as gFrameworkDef.Constructor).prototype[innerHelper.kCompClassName]);
+        else {
+            const className = (arg0 as gFrameworkDef.Constructor).prototype[innerHelper.kCompClassName];
+            misc.logger.assert(!!className);
+            return this.getCompInfoByName(className);
+        }
     }
 
     getCompInfoByName(className: string) {
