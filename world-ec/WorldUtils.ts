@@ -3,12 +3,19 @@ import { WorldComponent } from './WorldComponent';
 
 export type WorldComponentOption = {
     className: string,
-    initTickale?: boolean,
+    initTickable?: boolean,
     tickDelta?: number,
+    tickPriority?: number,
 }
 
 
 export const worldUtils = new class {
+    readonly emptyOption: WorldComponentOption = {
+        className: 'unknown',
+        initTickable: true,
+        tickDelta: 0,
+        tickPriority: 100
+    };
     private _compInfos = new Map<string, ComponentInfo>();
 
     component<T extends WorldComponent>(clazz: gFrameworkDef.Constructor<T>, option?: WorldComponentOption) {
@@ -18,6 +25,14 @@ export const worldUtils = new class {
             this._compInfos.set(className, new ComponentInfo().setup(clazz, option));
         else
             curInfo.setup(clazz, option);
+        Object.defineProperty(
+            clazz.prototype,
+            'compOption',
+            {
+                get: () => curInfo,
+                writable: false
+            }
+        )
     }
 
     getCompInfo<T extends WorldComponent>(ctor: gFrameworkDef.Constructor<T>): ComponentInfo;
@@ -34,8 +49,14 @@ export const worldUtils = new class {
 
     getCompInfoByName(className: string) {
         const info = this._compInfos.get(className);
-        misc.logger.assert(!!info, () => `className:${className},需要先使用worldUtils.component装饰该类才能作为WorldComponent使用`);
+        misc.logger.assert(!!info, () => `className:${className},需要先使用worldUtils.component注册该类才能作为WorldComponent使用`);
         return info;
+    }
+
+    componentSorter(a: WorldComponent, b: WorldComponent) {
+        const optionA = a.compOption ?? worldUtils.emptyOption;
+        const optionB = b.compOption ?? worldUtils.emptyOption;
+        return optionA.tickPriority - optionB.tickPriority;
     }
 }
 
