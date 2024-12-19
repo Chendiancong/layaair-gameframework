@@ -5,6 +5,8 @@ declare namespace gFrameworkDef {
     type KeyWithoutType<T, U, K extends string  = keyof T> = K extends keyof T ? T[K] extends T ? never : K : never;
     type WithType<T, U> = { [K in KeyWithType<T, U>]: T[K] };
     type WithoutType<T, U> = { [K in KeyWithoutType<T, U>]: T[K] };
+    /** 解构联合类型，使编辑器能推导出联合类型内各个字段的信息 */
+    type Prettify<T> = { [K in keyof T]: T[K] };
 
     type ResLoadingState = 'initial'|'pending'|'loaded'|'failure';
 

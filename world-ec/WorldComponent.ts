@@ -1,44 +1,30 @@
 import { type WorldEntity } from "./WorldEntity";
+import { invokeLifeCycle, IWorldLifeCycle, lifeCycleHelper, WorldLifeCycleState } from "./WorldLifeCycle";
 import { WorldComponentOption, worldUtils } from "./WorldUtils";
 
-interface IComponentLifeCycle {
-    /** 是否激活 */
-    enabled: boolean;
-
-    /** 初始化时 */
-    onIntial?(): void;
-    /** 开始时 */
-    onStart?(): void;
-    /** 步进 */
-    onTick?(dt: number): void;
-    /** 激活时 */
-    onEnable?(): void;
-    /** 禁用时 */
-    onDisable?(): void;
-    /** 被摧毁时 */
-    onDestroy?(): void;
-}
-
-export const enum WorldComponentState {
-    None = 0,
-    Started = 1,
-    Destroyed = Started << 1,
-    Enabled = Destroyed << 1,
-}
-
-export class WorldComponent implements IComponentLifeCycle {
-    tickDelta = 0;
-    readonly entity: WorldEntity = void 0;
+export class WorldComponent implements IWorldLifeCycle {
     readonly compOption?: WorldComponentOption;
+
+    tickDelta = 0;
+    entity: WorldEntity = void 0;
+    lcState = WorldLifeCycleState.None;
+    private _uid = WorldComponent._nextGuid;
     private _enabled: boolean;
     private _tickPriority: number;
-    private _innerState = WorldComponentState.None;
 
-    get enabled() { return this._enabled; }
+    private static _guid = 0;
+    private static get _nextGuid() { return ++this._guid; }
+
+    get compUid() { return this._uid; }
+
+    get enabled() { return lifeCycleHelper.checkState(this, WorldLifeCycleState.Enabled); }
     set enabled(value: boolean) {
-        if (value !== this._enabled) {
-            this._enabled = value;
-            this.invokeLifeCycle(value ? 'onEnable' : 'onDisable')
+        if (value !== this.enabled) {
+            if (value)
+                lifeCycleHelper.setState(this, WorldLifeCycleState.Enabled);
+            else
+                lifeCycleHelper.unsetState(this, WorldLifeCycleState.Enabled);
+            this._enableChanged();
         }
     }
 
@@ -49,10 +35,10 @@ export class WorldComponent implements IComponentLifeCycle {
         this._tickPriority = value;
     }
 
-    get isOnStartCalled() { return this.checkInnerState(WorldComponentState.Started); }
-    get isDestroyed() { return this.checkInnerState(WorldComponentState.Destroyed); }
+    get isStarted() { return lifeCycleHelper.checkState(this, WorldLifeCycleState.Started); }
+    get isDestroyed() { return lifeCycleHelper.checkState(this, WorldLifeCycleState.Destroyed); }
 
-    onIntial?(): void;
+    onInitial?(): void;
     onStart?(): void;
     onTick?(dt: number): void;
     onEnable?(): void;
@@ -65,49 +51,29 @@ export class WorldComponent implements IComponentLifeCycle {
         this._enabled = option?.initTickable ?? emptyOption.initTickable;
         this.tickDelta = option?.tickDelta ?? emptyOption.tickDelta;
         this._tickPriority = option?.tickPriority ?? emptyOption.tickPriority;
-        this.invokeLifeCycle('onIntial');
+        invokeLifeCycle(this, 'onInitial');
+        this._enableChanged();
     }
 
     destroy() {
         if (this.entity)
             this.entity.removeComponent(this);
         else
-            this.internalDestroy();
+            this._internalDestroy();
     }
 
     /**
      * @deprecated internal
      */
-    checkInnerState(targetState: WorldComponentState) {
-        return (this._innerState&targetState) === targetState;
+    _internalDestroy() {
+        lifeCycleHelper.setState(this, WorldLifeCycleState.Destroyed);
+        invokeLifeCycle(this, 'onDestroy');
     }
 
-    /**
-     * @deprecated internal
-     */
-    setInnerState(targetState: WorldComponentState) {
-        this._innerState |= targetState;
-    }
-
-    /**
-     * @deprecated internal
-     */
-    unsetInnerState(targetState: WorldComponentState) {
-        this._innerState &= ~targetState;
-    }
-
-    /**
-     * @deprecated internal
-     */
-    internalDestroy() {
-        this.setInnerState(WorldComponentState.Destroyed);
-        this.invokeLifeCycle('onDestroy');
-    }
-
-    /**
-     * @deprecated internal
-     */
-    invokeLifeCycle<K extends gFrameworkDef.KeyWithType<IComponentLifeCycle, Function>>(funName: K, ...args: Parameters<IComponentLifeCycle[K]>) {
-        (Object.getPrototypeOf(this)[funName] as Function).call(this, ...args);
+    private _enableChanged() {
+        if (this._enabled)
+            invokeLifeCycle(this, 'onEnable');
+        else
+            invokeLifeCycle(this, 'onDisable');
     }
 }
