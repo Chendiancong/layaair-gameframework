@@ -16,24 +16,49 @@ export const worldUtils = new class {
         tickDelta: 0,
         tickPriority: 100
     };
-    private _compInfos = new Map<string, ComponentInfo>();
 
-    component<T extends WorldComponent>(clazz: gFrameworkDef.Constructor<T>, option?: WorldComponentOption) {
-        const className = innerHelper.convertClassName(clazz, option);
-        let curInfo = this._compInfos.get(className);
-        if (!curInfo)
-            this._compInfos.set(className, new ComponentInfo().setup(clazz, option));
-        else
-            curInfo.setup(clazz, option);
-        Object.defineProperty(
-            clazz.prototype,
-            'compOption',
-            {
-                get: () => curInfo,
-                writable: false
+    readonly decorators = new class {
+        component<T extends WorldComponent>(clazz: gFrameworkDef.Constructor<T>): void;
+        component(option: WorldComponentOption): Function;
+        component(arg0: any): Function|void {
+            if ((arg0 as Function).prototype)
+                worldUtils.decorators._regComponent(arg0);
+            else
+                return function (clazz: gFrameworkDef.Constructor<WorldComponent>) {
+                    worldUtils.decorators._regComponent(clazz, arg0);
+                }
+        }
+
+        private _regComponent(clazz: gFrameworkDef.Constructor, option?: WorldComponentOption) {
+            option = this._confirmOption(clazz, option);
+            const className = innerHelper.convertClassName(clazz, option);
+            let curInfo = worldUtils._compInfos.get(className);
+            if (!curInfo)
+                worldUtils._compInfos.set(
+                    className,
+                    curInfo = new ComponentInfo(clazz, option)
+                );
+            else
+                curInfo.setup(clazz, option);
+            
+            Object.defineProperty(
+                clazz.prototype,
+                'compOption',
+                {
+                    get: () => curInfo
+                }
+            );
+        }
+
+        private _confirmOption(clazz: gFrameworkDef.Constructor, origin?: WorldComponentOption) {
+            if (!origin) {
+                origin = Object.create(worldUtils.emptyOption);
+                origin.className = clazz.name;
             }
-        )
+            return origin;
+        }
     }
+    private _compInfos = new Map<string, ComponentInfo>();
 
     getCompInfo<T extends WorldComponent>(ctor: gFrameworkDef.Constructor<T>): ComponentInfo;
     getCompInfo(className: string): ComponentInfo;
@@ -64,18 +89,26 @@ const innerHelper = new class {
     readonly kCompClassName = '$CompClassName';
 
     convertClassName(clazz: gFrameworkDef.Constructor, option?: WorldComponentOption) {
-        return option?.className ?? clazz.constructor.name;
+        return option?.className ?? clazz.name;
     }
 }
 
 class ComponentInfo implements WorldComponentOption {
     ctor: gFrameworkDef.Constructor;
-
     className: string;
+    private _innerOption: WorldComponentOption;
+
+    get initTickable() { return this._innerOption.initTickable; }
+    get tickDelta() { return this._innerOption.tickDelta; }
+    get tickPriority() { return this._innerOption.tickPriority; }
+
+    constructor(ctor: gFrameworkDef.Constructor, option: WorldComponentOption) {
+        this.setup(ctor, option);
+    }
 
     setup(ctor: gFrameworkDef.Constructor, option: WorldComponentOption) {
         this.ctor = ctor;
-        Object.assign(this, option);
+        this._innerOption = option;
         this.className = this.className ?? innerHelper.convertClassName(ctor, option);
         this.ctor.prototype[innerHelper.kCompClassName] = this.className;
         return this;

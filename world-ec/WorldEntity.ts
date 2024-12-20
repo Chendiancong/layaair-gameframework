@@ -1,7 +1,7 @@
 import { misc } from "..";
 import { type World } from "./World";
 import { WorldComponent } from "./WorldComponent";
-import { invokeLifeCycle, IWorldLifeCycle, lifeCycleHelper, WorldLifeCycleState } from "./WorldLifeCycle";
+import { IWorldLifeCycle, lifeCycleHelper, WorldLifeCycleState } from "./WorldLifeCycle";
 import { worldUtils } from "./WorldUtils";
 
 const enum ExtraState {
@@ -38,16 +38,6 @@ export class WorldEntity implements IWorldLifeCycle {
 
     private static _guid = 1;
     private static get _nextGuid() { return ++this._guid; }
-
-    /**
-     * @deprecated internal
-     */
-    _installWorld(w: World) {
-        misc.logger.assert(!w);
-        this._world = w;
-        invokeLifeCycle(this, 'onInitial');
-        this.enabled = true;
-    }
 
     addComponent<T extends WorldComponent>(ctor: gFrameworkDef.Constructor<T>): T;
     addComponent<T extends WorldComponent = WorldComponent>(className: string): T;
@@ -94,28 +84,44 @@ export class WorldEntity implements IWorldLifeCycle {
     /**
      * @deprecated internal
      */
-    _internalDestroy() {
-        this.removeAllComponents();
-        lifeCycleHelper.setState(this, WorldLifeCycleState.Destroyed);
+    _internalInit(w: World) {
+        misc.logger.assert(!!w);
+        this._world = w;
+        this.onInitial?.call(this);
+        this.enabled = true;
     }
 
     /**
      * @deprecated internal
      */
-    _tick(dt: number): void {
+    _internalDestroy() {
+        this.removeAllComponents();
+        lifeCycleHelper.setState(this, WorldLifeCycleState.Destroyed);
+        this.onDestroy?.call(this);
+    }
+
+    /**
+     * @deprecated internal
+     */
+    _internalTick(dt: number): void {
         if (!lifeCycleHelper.checkState(this, WorldLifeCycleState.Enabled))
             return;
         this._handleSleepings();
         this._handleWillRunnings();
         this._handleRunnings(dt);
-        if (this.onTick)
-            this.onTick(dt);
+        this.onTick?.call(this, dt);
     }
 
-    onTick?(dt?: number): void;
+    onInitial?(): void;
+    onStart?(): void;
+    onTick?(dt: number): void;
+    onEnable?(): void;
+    onDisable?(): void;
+    onDestroy?(): void;
 
     private _handleSleepings() {
         const comps = this._sleepingComponents;
+        let changed = false;
         for (let i = 0, len = comps.length; i < len; ++i) {
             const comp = comps[i];
             if (comp.enabled) {
@@ -124,20 +130,29 @@ export class WorldEntity implements IWorldLifeCycle {
                 else
                     this._runningComponents.push(comp);
                 this._extraState |= ExtraState.SortComponents;
+                comps[i] = void 0;
+                changed = true;
             }
         }
+        if (changed)
+            misc.jsUtil.arrayRemove(comps, void 0);
     }
 
     private _handleWillRunnings() {
         const comps = this._willRunningComponents;
+        let changed = false;
         for (let i = 0, len = comps.length; i < len; ++i) {
             const comp = comps[i];
-            invokeLifeCycle(comp, 'onStart');
             lifeCycleHelper.setState(comp, WorldLifeCycleState.Started);
+            comp.onStart?.call(this);
             
             this._runningComponents.push(comp);
             this._extraState |= ExtraState.SortComponents;
+            comps[i] = void 0;
+            changed = true;
         }
+        if (changed)
+            misc.jsUtil.arrayRemove(comps, void 0);
     }
 
     private _handleRunnings(dt: number) {
@@ -152,8 +167,10 @@ export class WorldEntity implements IWorldLifeCycle {
                 comps[i] = void 0;
                 changed = true;
             } else
-                invokeLifeCycle(comp, 'onTick', dt);
+                comp.onTick?.call(comp, dt);
         }
+        if (changed)
+            misc.jsUtil.arrayRemove(comps, void 0);
     }
 
     private _createComponent(nameOrCtor: string|gFrameworkDef.Constructor<WorldComponent>): WorldComponent {
@@ -162,6 +179,7 @@ export class WorldEntity implements IWorldLifeCycle {
     }
 
     private _addComponent(comp: WorldComponent) {
+        comp._setEntity(this);
         this._components.push(comp);
         if (comp.enabled)
             this._willRunningComponents.push(comp);
@@ -171,8 +189,8 @@ export class WorldEntity implements IWorldLifeCycle {
 
     private _enableChanged() {
         if (this.enabled)
-            invokeLifeCycle(this, 'onEnable');
+            this.onEnable?.call(this);
         else
-            invokeLifeCycle(this, 'onDisable');
+            this.onDestroy?.call(this);
     }
 }

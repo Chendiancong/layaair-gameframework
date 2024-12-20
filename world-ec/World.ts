@@ -1,6 +1,5 @@
 import { misc } from "..";
 import { WorldEntity } from "./WorldEntity";
-import { invokeLifeCycle } from "./WorldLifeCycle";
 
 export class World {
     private _entities: WorldEntity[] = [];
@@ -12,7 +11,7 @@ export class World {
         const e = new ctor(...args);
         this._entities.push(e);
         this._id2Entities.set(e.entityId, e);
-        e._installWorld(this);
+        e._internalInit(this);
         return e as any;
     }
 
@@ -26,6 +25,6 @@ export class World {
 
     tick(dt: number) {
         for (let i = 0, len = this._entities.length; i < len; ++i)
-            this._entities[i]._tick(dt);
+            this._entities[i]._internalTick(dt);
     }
 }

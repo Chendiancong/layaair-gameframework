@@ -86,7 +86,7 @@ export const jsUtil = new class {
     }
 
     equals<T>(a: T, b: T) {
-        const isSame = !!(a as gFrameworkDef.IEqualable<T>).equals ?
+        const isSame = !!(a as gFrameworkDef.IEqualable<T>)?.equals ?
             (a as gFrameworkDef.IEqualable<T>).equals(b) :
             a === b;
         return isSame;

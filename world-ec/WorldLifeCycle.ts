@@ -42,4 +42,8 @@ export const lifeCycleHelper = new class {
     unsetState(lifeCycle: IWorldLifeCycle, targetState: WorldLifeCycleState) {
         lifeCycle.lcState &= ~targetState;
     }
+
+    invoke<T extends IWorldLifeCycle, K extends gFrameworkDef.KeyWithType<IWorldLifeCycle, Function>>(lifeCycle: T, funName: K, ...args: Parameters<IWorldLifeCycle[K]>) {
+        (Object.getPrototypeOf(lifeCycle)[funName] as Function).call(lifeCycle, ...args);
+    }
 }

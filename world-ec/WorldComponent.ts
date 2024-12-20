@@ -1,21 +1,22 @@
+import { misc } from "..";
 import { type WorldEntity } from "./WorldEntity";
-import { invokeLifeCycle, IWorldLifeCycle, lifeCycleHelper, WorldLifeCycleState } from "./WorldLifeCycle";
+import { IWorldLifeCycle, lifeCycleHelper, WorldLifeCycleState } from "./WorldLifeCycle";
 import { WorldComponentOption, worldUtils } from "./WorldUtils";
 
 export class WorldComponent implements IWorldLifeCycle {
     readonly compOption?: WorldComponentOption;
 
     tickDelta = 0;
-    entity: WorldEntity = void 0;
     lcState = WorldLifeCycleState.None;
+    private _entity: WorldEntity = void 0;
     private _uid = WorldComponent._nextGuid;
-    private _enabled: boolean;
     private _tickPriority: number;
 
     private static _guid = 0;
     private static get _nextGuid() { return ++this._guid; }
 
     get compUid() { return this._uid; }
+    get entity() { return this._entity; }
 
     get enabled() { return lifeCycleHelper.checkState(this, WorldLifeCycleState.Enabled); }
     set enabled(value: boolean) {
@@ -46,18 +47,21 @@ export class WorldComponent implements IWorldLifeCycle {
     onDestroy?(): void;
 
     constructor() {
-        const emptyOption = worldUtils.emptyOption;
-        const option = this.compOption;
-        this._enabled = option?.initTickable ?? emptyOption.initTickable;
-        this.tickDelta = option?.tickDelta ?? emptyOption.tickDelta;
-        this._tickPriority = option?.tickPriority ?? emptyOption.tickPriority;
-        invokeLifeCycle(this, 'onInitial');
+        const option = this.compOption ?? worldUtils.emptyOption;
+        this.tickDelta = option.tickDelta;
+        this._tickPriority = option.tickPriority;
+        if (option.initTickable)
+            lifeCycleHelper.setState(this, WorldLifeCycleState.Enabled);
+        else
+            lifeCycleHelper.unsetState(this, WorldLifeCycleState.Enabled);
+
+        this.onInitial?.call(this);
         this._enableChanged();
     }
 
     destroy() {
-        if (this.entity)
-            this.entity.removeComponent(this);
+        if (this._entity)
+            this._entity.removeComponent(this);
         else
             this._internalDestroy();
     }
@@ -66,14 +70,22 @@ export class WorldComponent implements IWorldLifeCycle {
      * @deprecated internal
      */
     _internalDestroy() {
+        this._setEntity(void 0);
         lifeCycleHelper.setState(this, WorldLifeCycleState.Destroyed);
-        invokeLifeCycle(this, 'onDestroy');
+        this.onDestroy?.call(this);
+    }
+
+    /**
+     * @deprecated internal
+     */
+    _setEntity(e: WorldEntity) {
+        this._entity = e;
     }
 
     private _enableChanged() {
-        if (this._enabled)
-            invokeLifeCycle(this, 'onEnable');
+        if (lifeCycleHelper.checkState(this, WorldLifeCycleState.Enabled))
+            this.onEnable?.call(this);
         else
-            invokeLifeCycle(this, 'onDisable');
+            this.onDisable?.call(this);
     }
 }
