@@ -54,9 +54,6 @@ export class WorldComponent implements IWorldLifeCycle {
             lifeCycleHelper.setState(this, WorldLifeCycleState.Enabled);
         else
             lifeCycleHelper.unsetState(this, WorldLifeCycleState.Enabled);
-
-        this.onInitial?.call(this);
-        this._enableChanged();
     }
 
     destroy() {
@@ -69,7 +66,17 @@ export class WorldComponent implements IWorldLifeCycle {
     /**
      * @deprecated internal
      */
+    _internalInit(e: WorldEntity) {
+        this._entity = e;
+        this.onInitial?.call(this);
+        this._enableChanged();
+    }
+
+    /**
+     * @deprecated internal
+     */
     _internalDestroy() {
+        this.enabled = false;
         this._setEntity(void 0);
         lifeCycleHelper.setState(this, WorldLifeCycleState.Destroyed);
         this.onDestroy?.call(this);
@@ -82,7 +89,10 @@ export class WorldComponent implements IWorldLifeCycle {
         this._entity = e;
     }
 
-    private _enableChanged() {
+    /**
+     * @deprecated internal
+     */
+    _enableChanged() {
         if (lifeCycleHelper.checkState(this, WorldLifeCycleState.Enabled))
             this.onEnable?.call(this);
         else
