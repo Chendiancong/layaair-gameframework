@@ -8,7 +8,6 @@ export type WorldComponentOption = {
     tickPriority?: number,
 }
 
-
 export const worldUtils = new class {
     readonly emptyOption: WorldComponentOption = {
         className: 'unknown',

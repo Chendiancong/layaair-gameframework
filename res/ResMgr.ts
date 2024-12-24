@@ -15,6 +15,14 @@ export class ResMgr {
         return await Laya.loader.load(url, type === 'unknown' ? void 0 : type);
     }
 
+    async loadMany<K extends ResTypeKey = 'unknown'>(urls: string[], type?: K): Promise<K extends 'unknown' ? any[] : ResTypeMapping[K][]> {
+        return await Laya.loader.load(urls, type === 'unknown' ? void 0 : type);
+    }
+
+    async loadPackage(packageUrl: string): Promise<void> {
+        return await Laya.loader.loadPackage(packageUrl);
+    }
+
     instantiate<T extends Laya.Node = Laya.Node>(res: Laya.Prefab, ...args: Parameters<Laya.Prefab['create']>) {
         const node = res.create(...args);
         ResKeeper.register(ResInfo.createInfo(res.url, res), node);
