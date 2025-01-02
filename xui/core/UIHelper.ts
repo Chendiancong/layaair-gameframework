@@ -22,6 +22,7 @@ export class UIHelper {
 
     readonly decorators = new class {
         readonly viewNameKey = '$uiViewName';
+        readonly propInfosKey = '$uiPropInfos';
 
         private _regInfos = new Map<string, IViewRegInfo>();
 
@@ -53,6 +54,26 @@ export class UIHelper {
             this._regInfos.set(regInfo.viewName, new ViewRegInfo(clazz, regInfo));
             (clazz as any)[this.viewNameKey] = clazz.prototype[this.viewNameKey] = regInfo.viewName;
         }
+
+        prop<T extends Laya.Node>(clazzProto: T, propName: string): void;
+        prop<T extends IUIPropInfo, U extends Laya.Node>(info: IUIPropInfo): (clazzProto: U, propName: string) => void;
+        prop(arg0: any, arg1?: any): any {
+            if (typeof arg1 === 'string')
+                this._setupPropInfo(arg0, arg1, void 0);
+            else {
+                const that = this;
+                return function<T extends Laya.Node>(clazzProto: T, propName: string) {
+                    that._setupPropInfo(clazzProto, propName, arg0);
+                }
+            }
+        }
+
+        private _setupPropInfo(clazzProto: any, propName: string, propInfo: IUIPropInfo) {
+            let infos = clazzProto[this.propInfosKey];
+            if (!infos)
+                infos = clazzProto[this.propInfosKey] = {};
+            infos[propName] = propInfo;
+        }
     }
 }
 
@@ -61,7 +82,7 @@ export interface IViewRegInfo {
     viewPath?: string;
 }
 
-export class ViewRegInfo implements IViewRegInfo {
+class ViewRegInfo implements IViewRegInfo {
     viewName: string;
     viewPath?: string;
     viewClazz: gFrameworkDef.Constructor;
@@ -69,6 +90,23 @@ export class ViewRegInfo implements IViewRegInfo {
     constructor(clazz: gFrameworkDef.Constructor, regInfo: IViewRegInfo) {
         Object.assign(this, regInfo);
         this.viewClazz = clazz;
+    }
+}
+
+export interface IUIPropInfo {
+    path?: string;
+}
+
+class UIPropInfo implements IUIPropInfo {
+    clazzProto: any;
+    propName: string;
+    path?: string;
+
+    constructor(clazzProto: any, propName: string, propInfo?: IUIPropInfo) {
+        if (propInfo)
+            Object.assign(this, propInfo);
+        this.clazzProto = clazzProto;
+        this.propName = propName;
     }
 }
 

@@ -1,0 +1,1 @@
+export { UIHelper, uiHelper, IViewRegInfo } from './core/UIHelper';
