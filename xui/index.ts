@@ -1,1 +1,1 @@
-export { UIHelper, uiHelper, IViewRegInfo } from './core/UIHelper';
+export { UIHelper, uiHelper, IViewRegOption as IViewRegInfo } from './core/UIHelper';

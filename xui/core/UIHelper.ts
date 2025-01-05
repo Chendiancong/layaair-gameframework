@@ -1,10 +1,10 @@
 import { misc } from "../..";
 
 export class UIHelper {
-    getViewInfo<T extends Laya.Sprite>(clazz: gFrameworkDef.Constructor<T>): IViewRegInfo;
-    getViewInfo<T extends Laya.Sprite>(view: T): IViewRegInfo;
-    getViewInfo(viewName: string): IViewRegInfo;
-    getViewInfo(arg0: any): IViewRegInfo {
+    getViewInfo<T extends Laya.Sprite>(clazz: gFrameworkDef.Constructor<T>): IViewRegOption;
+    getViewInfo<T extends Laya.Sprite>(view: T): IViewRegOption;
+    getViewInfo(viewName: string): IViewRegOption;
+    getViewInfo(arg0: any): IViewRegOption {
         if (typeof arg0 === 'string')
             return this.decorators.getRegInfo(arg0);
         else {
@@ -24,11 +24,11 @@ export class UIHelper {
         readonly viewNameKey = '$uiViewName';
         readonly propInfosKey = '$uiPropInfos';
 
-        private _regInfos = new Map<string, IViewRegInfo>();
+        private _regInfos = new Map<string, IViewRegOption>();
 
         view<T extends Laya.Sprite>(clazz: gFrameworkDef.Constructor<T>): void;
         view(viewName: string): (clazz: gFrameworkDef.Constructor<Laya.Sprite>) => void;
-        view(regInfo: IViewRegInfo): (clazz: gFrameworkDef.Constructor<Laya.Sprite>) => void;
+        view(regInfo: IViewRegOption): (clazz: gFrameworkDef.Constructor<Laya.Sprite>) => void;
         view(arg0: any): any {
             if (typeof arg0 === 'function') {
                 this._regView(arg0 as any, { viewName: arg0.name })
@@ -49,14 +49,14 @@ export class UIHelper {
             return this._regInfos.get(key);
         }
 
-        private _regView(clazz: gFrameworkDef.Constructor, regInfo: IViewRegInfo) {
+        private _regView(clazz: gFrameworkDef.Constructor, regInfo: IViewRegOption) {
             misc.logger.assert(!this._regInfos.get(regInfo.viewName));
             this._regInfos.set(regInfo.viewName, new ViewRegInfo(clazz, regInfo));
             (clazz as any)[this.viewNameKey] = clazz.prototype[this.viewNameKey] = regInfo.viewName;
         }
 
         prop<T extends Laya.Node>(clazzProto: T, propName: string): void;
-        prop<T extends IUIPropInfo, U extends Laya.Node>(info: IUIPropInfo): (clazzProto: U, propName: string) => void;
+        prop<T extends IUIPropOption, U extends Laya.Node>(info: IUIPropOption): (clazzProto: U, propName: string) => void;
         prop(arg0: any, arg1?: any): any {
             if (typeof arg1 === 'string')
                 this._setupPropInfo(arg0, arg1, void 0);
@@ -68,41 +68,41 @@ export class UIHelper {
             }
         }
 
-        private _setupPropInfo(clazzProto: any, propName: string, propInfo: IUIPropInfo) {
+        private _setupPropInfo(clazzProto: any, propName: string, propInfo: IUIPropOption) {
             let infos = clazzProto[this.propInfosKey];
             if (!infos)
                 infos = clazzProto[this.propInfosKey] = {};
-            infos[propName] = propInfo;
+            infos[propName] = new UIPropInfo(clazzProto, propName, propInfo);
         }
     }
 }
 
-export interface IViewRegInfo {
+export interface IViewRegOption {
     viewName: string;
     viewPath?: string;
 }
 
-class ViewRegInfo implements IViewRegInfo {
+export class ViewRegInfo implements IViewRegOption {
     viewName: string;
     viewPath?: string;
     viewClazz: gFrameworkDef.Constructor;
 
-    constructor(clazz: gFrameworkDef.Constructor, regInfo: IViewRegInfo) {
+    constructor(clazz: gFrameworkDef.Constructor, regInfo: IViewRegOption) {
         Object.assign(this, regInfo);
         this.viewClazz = clazz;
     }
 }
 
-export interface IUIPropInfo {
+export interface IUIPropOption {
     path?: string;
 }
 
-class UIPropInfo implements IUIPropInfo {
+export class UIPropInfo implements IUIPropOption {
     clazzProto: any;
     propName: string;
     path?: string;
 
-    constructor(clazzProto: any, propName: string, propInfo?: IUIPropInfo) {
+    constructor(clazzProto: any, propName: string, propInfo?: IUIPropOption) {
         if (propInfo)
             Object.assign(this, propInfo);
         this.clazzProto = clazzProto;
