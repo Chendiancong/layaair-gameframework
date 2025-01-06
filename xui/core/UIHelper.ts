@@ -1,4 +1,5 @@
 import { misc } from "../..";
+import { UIScript } from "./UIScript";
 
 export class UIHelper {
     getViewInfo<T extends Laya.Sprite>(clazz: gFrameworkDef.Constructor<T>): IViewRegOption;
@@ -20,30 +21,39 @@ export class UIHelper {
         return (clazzOrView as any)[this.decorators.viewNameKey];
     }
 
+    getUIProps<T extends UIScript>(clazz: gFrameworkDef.Constructor<T>): Record<string, UIPropInfo>;
+    getUIProps<T extends UIScript>(ins: T): Record<string, UIPropInfo>;
+    getUIProps(arg0: any): any {
+        if (arg0.prototype != void 0)
+            return arg0.prototype[this.decorators.propInfosKey];
+        else
+            return arg0[this.decorators.propInfosKey];
+    }
+
     readonly decorators = new class {
         readonly viewNameKey = '$uiViewName';
         readonly propInfosKey = '$uiPropInfos';
 
         private _regInfos = new Map<string, IViewRegOption>();
 
-        view<T extends Laya.Sprite>(clazz: gFrameworkDef.Constructor<T>): void;
-        view(viewName: string): (clazz: gFrameworkDef.Constructor<Laya.Sprite>) => void;
-        view(regInfo: IViewRegOption): (clazz: gFrameworkDef.Constructor<Laya.Sprite>) => void;
-        view(arg0: any): any {
-            if (typeof arg0 === 'function') {
-                this._regView(arg0 as any, { viewName: arg0.name })
-            } else if (typeof arg0 === 'string') {
-                const that = this;
-                return function (clazz: gFrameworkDef.Constructor) {
-                    that._regView(clazz, { viewName: arg0 })
-                }
-            } else {
-                const that = this;
-                return function (clazz: gFrameworkDef.Constructor) {
-                    that._regView(clazz, arg0);
-                }
-            }
-        }
+        // view<T extends Laya.Sprite>(clazz: gFrameworkDef.Constructor<T>): void;
+        // view(viewName: string): (clazz: gFrameworkDef.Constructor<Laya.Sprite>) => void;
+        // view(regInfo: IViewRegOption): (clazz: gFrameworkDef.Constructor<Laya.Sprite>) => void;
+        // view(arg0: any): any {
+        //     if (typeof arg0 === 'function') {
+        //         this._regView(arg0 as any, { viewName: arg0.name })
+        //     } else if (typeof arg0 === 'string') {
+        //         const that = this;
+        //         return function (clazz: gFrameworkDef.Constructor) {
+        //             that._regView(clazz, { viewName: arg0 })
+        //         }
+        //     } else {
+        //         const that = this;
+        //         return function (clazz: gFrameworkDef.Constructor) {
+        //             that._regView(clazz, arg0);
+        //         }
+        //     }
+        // }
 
         getRegInfo(key: string) {
             return this._regInfos.get(key);
@@ -79,13 +89,15 @@ export class UIHelper {
 
 export interface IViewRegOption {
     viewName: string;
-    viewPath?: string;
+    layer?: string|number;
+    viewUrl?: string;
 }
 
 export class ViewRegInfo implements IViewRegOption {
     viewName: string;
-    viewPath?: string;
-    viewClazz: gFrameworkDef.Constructor;
+    layer?: string|number;
+    viewUrl?: string;
+    viewClazz: gFrameworkDef.Constructor<UIScript>;
 
     constructor(clazz: gFrameworkDef.Constructor, regInfo: IViewRegOption) {
         Object.assign(this, regInfo);
@@ -95,12 +107,14 @@ export class ViewRegInfo implements IViewRegOption {
 
 export interface IUIPropOption {
     path?: string;
+    recursive?: boolean;
 }
 
 export class UIPropInfo implements IUIPropOption {
     clazzProto: any;
     propName: string;
     path?: string;
+    recursive?: boolean;
 
     constructor(clazzProto: any, propName: string, propInfo?: IUIPropOption) {
         if (propInfo)

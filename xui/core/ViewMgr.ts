@@ -1,13 +1,13 @@
-import { ViewLayerMgr } from "./ViewLayerMgr";
+import { BaseViewLayerMgr } from "./ViewLayerMgr";
 
-export class ViewMgr<LayerEnum extends number = number> {
+export class ViewMgr {
     private _rootNode: Laya.Sprite;
-    private _layerMgr: ViewLayerMgr<LayerEnum>;
+    private _layerMgr: BaseViewLayerMgr;
 
     get rootNode() { return this._rootNode; }
     get layerMgr() { return this._layerMgr; }
 
-    constructor(rootNode: Laya.Sprite, layerMgr: ViewLayerMgr<LayerEnum>) {
+    constructor(rootNode: Laya.Sprite, layerMgr: BaseViewLayerMgr) {
         this._rootNode = rootNode;
         this._layerMgr = layerMgr;
         layerMgr.setup(this);

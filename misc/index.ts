@@ -5,3 +5,4 @@ export { promiseUtil, PromiseDeferer } from './PromiseUtil';
 export { myGlobal } from './MyGlobal';
 export { logger } from './Logger';
 export { Meta, IMetaInfo } from './Meta';
+export { layaExtends } from './LayaExtends';
