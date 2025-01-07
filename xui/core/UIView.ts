@@ -1,7 +1,7 @@
 import { layaExtends } from "../../misc";
 import { uiHelper } from "./UIHelper";
 
-export abstract class UIScript<Data = any> {
+export abstract class UIView<Data = any> {
     protected _node: Laya.Node;
     protected _data: Data;
 
@@ -70,9 +70,9 @@ export abstract class UIScript<Data = any> {
     }
 }
 
-export class UIView extends UIScript {
+export class UIPanel extends UIView {
     onOpen?(arg?: any): void;
     onClose?(): void;
 }
 
-export class UIComp extends UIScript { }
+export class UIComp extends UIView { }

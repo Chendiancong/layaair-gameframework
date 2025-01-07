@@ -1,7 +1,7 @@
 import { misc, resMgr } from "../..";
 import { layaExtends } from "../../misc";
 import { ViewRegInfo } from "./UIHelper";
-import { UIView } from "./UIScript";
+import { UIPanel } from "./UIView";
 import { ViewMgr } from './ViewMgr';
 
 const enum CtrlState {
@@ -20,11 +20,11 @@ export class BaseViewCtrl {
     viewContainer?: Laya.UIComponent;
     viewInfo: ViewRegInfo;
     openArg?: any;
-    view?: UIView;
+    view?: UIPanel;
 
     protected _ctrlState = CtrlState.Initial;
-    protected _loadDefer: misc.PromiseDeferer<UIView>;
-    protected _openDefer: misc.PromiseDeferer<UIView>;
+    protected _loadDefer: misc.PromiseDeferer<UIPanel>;
+    protected _openDefer: misc.PromiseDeferer<UIPanel>;
 
     get loaded() { return this._loadDefer.promise; }
     get opened() { return this._openDefer.promise; }
@@ -77,7 +77,7 @@ export class BaseViewCtrl {
         container.centerX = container.centerY = 0;
 
         if (!this.view)
-            this.view = Reflect.construct(this.viewInfo.viewClazz, [node]) as UIView;
+            this.view = Reflect.construct(this.viewInfo.viewClazz, [node]) as UIPanel;
         this._loadDefer.resolve(this.view);
         this._openView();
     }
@@ -108,7 +108,7 @@ export class BaseViewCtrl {
     }
 }
 
-export class ViewCtrl<ViewClass extends UIView> extends BaseViewCtrl {
+export class ViewCtrl<ViewClass extends UIPanel> extends BaseViewCtrl {
     declare view?: ViewClass;
 
     get loaded() { return this._loadDefer.promise as Promise<ViewClass>; }

@@ -1,2 +1,2 @@
 export { UIHelper, uiHelper, IViewRegOption as IViewRegInfo } from './core/UIHelper';
-export { UIScript, UIView, UIComp } from './core/UIScript';
+export { UIView as UIScript, UIPanel as UIView, UIComp } from './core/UIView';
