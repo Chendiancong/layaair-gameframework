@@ -1,6 +1,7 @@
+import { misc } from "../..";
 import { uiHelper } from "./UIHelper";
 import { UIPanel } from "./UIView";
-import { BaseViewCtrl } from "./ViewCtrl";
+import { BaseViewCtrl, ViewCtrl } from "./ViewCtrl";
 import { BaseViewLayerMgr } from "./ViewLayerMgr";
 
 export class ViewMgr {
@@ -17,7 +18,27 @@ export class ViewMgr {
         layerMgr.setup(this);
     }
 
-    open<T extends UIPanel>(viewClass: gFrameworkDef.Constructor<T>, ...arg: T['onOpen'] extends (..._arg: infer R) => any ? R : any) {
-        const viewInfo = uiHelper.getViewInfo(viewClass);
+    open<ViewClass extends UIPanel>(viewClass: gFrameworkDef.Constructor<ViewClass>, ...args: ViewClass['onOpen'] extends (..._args: infer R) => any ? R : any): Promise<ViewClass>;
+    open(viewName: string, arg?: any): Promise<UIPanel>;
+    open(arg0: string|gFrameworkDef.Constructor<UIPanel>, ...args: any[]): Promise<UIPanel> {
+        const viewInfo = uiHelper.getViewInfo(arg0 as any);
+        misc.logger.assert(viewInfo != void 0);
+        const viewName = viewInfo.viewName;
+        let ctrl = this._views[viewName];
+        if (ctrl == void 0) {
+            ctrl = new BaseViewCtrl(this, viewInfo);
+            this._views[viewName] = ctrl;
+        }
+        return ctrl._open(...args);
+    }
+
+    close<ViewClass extends UIPanel>(viewClass: gFrameworkDef.Constructor<ViewClass>): void;
+    close(viewName: string): void;
+    close(arg0: string|gFrameworkDef.Constructor<UIPanel>): void {
+        const viewInfo = uiHelper.getViewInfo(arg0 as any);
+        misc.logger.assert(viewInfo != void 0);
+        const viewName = viewInfo.viewName;
+        const ctrl = this._views[viewName];
+        ctrl?._close();
     }
 }

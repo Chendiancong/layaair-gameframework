@@ -49,6 +49,27 @@ export class BaseViewCtrl {
         this._loadView();
     }
 
+    /**
+     * @deprecated internal
+     */
+    _open(...args: any[]) {
+        const state = this._ctrlState;
+        if (state === CtrlState.Initial) {
+            this.openArg = args[0];
+            this._loadView();
+        }
+        else if (state === CtrlState.Opened)
+            this.view?.onOpen && this.view.onOpen(...args);
+        return this.opened;
+    }
+
+    /**
+     * @deprecated internal
+     */
+    _close() {
+        this._closeView();
+    }
+
     private async _loadView() {
         if (this._ctrlState !== CtrlState.Initial)
             return;

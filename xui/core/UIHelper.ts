@@ -2,10 +2,10 @@ import { misc } from "../..";
 import { UIView, UIPanel } from "./UIView";
 
 export class UIHelper {
-    getViewInfo<T extends UIPanel>(clazz: gFrameworkDef.Constructor<T>): IViewRegOption;
-    getViewInfo<T extends UIPanel>(view: T): IViewRegOption;
-    getViewInfo(viewName: string): IViewRegOption;
-    getViewInfo(arg0: any): IViewRegOption {
+    getViewInfo<T extends UIPanel>(clazz: gFrameworkDef.Constructor<T>): ViewRegInfo;
+    getViewInfo<T extends UIPanel>(view: T): ViewRegInfo;
+    getViewInfo(viewName: string): ViewRegInfo;
+    getViewInfo(arg0: any): ViewRegInfo {
         if (typeof arg0 === 'string')
             return this.decorators.getRegInfo(arg0);
         else {
@@ -34,7 +34,7 @@ export class UIHelper {
         readonly viewNameKey = '$uiViewName';
         readonly propInfosKey = '$uiPropInfos';
 
-        private _regInfos = new Map<string, IViewRegOption>();
+        private _regInfos = new Map<string, ViewRegInfo>();
 
         view<T extends UIPanel>(clazz: gFrameworkDef.Constructor<T>): void;
         view(viewName: string): (clazz: gFrameworkDef.Constructor<UIPanel>) => void;
