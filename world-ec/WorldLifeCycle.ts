@@ -23,7 +23,8 @@ export const enum WorldLifeCycleState {
     Initialized = 1,
     Started = Initialized << 1,
     Enabled = Started << 1,
-    Destroyed = Enabled << 1,
+    PreDestroy = Enabled << 1,
+    Destroyed = PreDestroy << 1,
 }
 
 export function invokeLifeCycle<T extends IWorldLifeCycle, K extends gFrameworkDef.KeyWithType<IWorldLifeCycle, Function>>(target: T, funName: K, ...args: Parameters<IWorldLifeCycle[K]>) {

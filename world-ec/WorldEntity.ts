@@ -1,6 +1,7 @@
 import { misc } from "..";
 import { type World } from "./World";
 import { WorldComponent } from "./WorldComponent";
+import { createDriver } from "./WorldComponentDriver";
 import { IWorldLifeCycle, lifeCycleHelper, WorldLifeCycleState } from "./WorldLifeCycle";
 import { worldUtils } from "./WorldUtils";
 
@@ -14,10 +15,7 @@ export class WorldEntity implements IWorldLifeCycle {
     private _entityId = WorldEntity._nextGuid;
     private _world: World;
     private _components: WorldComponent[] = [];
-    private _willRunningComponents: WorldComponent[] = [];
-    private _runningComponents: WorldComponent[] = [];
-    private _sleepingComponents: WorldComponent[] = [];
-    private _extraState = ExtraState.None;
+    private _componentDriver = createDriver();
 
     get components(): ReadonlyArray<WorldComponent> {
         return this._components;
@@ -61,9 +59,7 @@ export class WorldEntity implements IWorldLifeCycle {
     removeComponent<T extends WorldComponent>(comp: T) {
         if (this._components.includes(comp)) {
             misc.jsUtil.arrayRemove(this._components, comp);
-            misc.jsUtil.arrayRemove(this._willRunningComponents, comp);
-            misc.jsUtil.arrayRemove(this._runningComponents, comp);
-            misc.jsUtil.arrayRemove(this._sleepingComponents, comp);
+            this._componentDriver.delete(comp);
             comp._internalDestroy();
         }
     }
@@ -71,9 +67,7 @@ export class WorldEntity implements IWorldLifeCycle {
     removeAllComponents() {
         const comps = this._components.concat();
         this._components.length = 0;
-        this._willRunningComponents.length = 0;
-        this._runningComponents.length = 0;
-        this._sleepingComponents.length = 0;
+        this._componentDriver.clear();
         comps.forEach(c => c._internalDestroy());
     }
 
@@ -94,23 +88,26 @@ export class WorldEntity implements IWorldLifeCycle {
     /**
      * @deprecated internal
      */
-    _internalDestroy() {
+    _internalPreDestroy() {
         if (this.enabled)
             this.enabled = false;
-        this.removeAllComponents();
-        lifeCycleHelper.setState(this, WorldLifeCycleState.Destroyed);
-        this.onDestroy?.call(this);
+        lifeCycleHelper.setState(this, WorldLifeCycleState.PreDestroy);
     }
 
     /**
      * @deprecated internal
      */
     _internalTick(dt: number): void {
+        if (lifeCycleHelper.checkState(this, WorldLifeCycleState.PreDestroy)) {
+            lifeCycleHelper.setState(this, WorldLifeCycleState.Destroyed);
+            this.removeAllComponents();
+            this.onDestroy?.call(this);
+            this._world?._disposeEntity(this);
+            delete this._world;
+        }
         if (!lifeCycleHelper.checkState(this, WorldLifeCycleState.Enabled))
             return;
-        this._handleSleepings();
-        this._handleWillRunnings();
-        this._handleRunnings(dt);
+        this._componentDriver.tick(dt);
         this.onTick?.call(this, dt);
     }
 
@@ -121,60 +118,6 @@ export class WorldEntity implements IWorldLifeCycle {
     onDisable?(): void;
     onDestroy?(): void;
 
-    private _handleSleepings() {
-        const comps = this._sleepingComponents;
-        let changed = false;
-        for (let i = 0, len = comps.length; i < len; ++i) {
-            const comp = comps[i];
-            if (comp.enabled) {
-                if (!comp.isStarted)
-                    this._willRunningComponents.push(comp);
-                else
-                    this._runningComponents.push(comp);
-                this._extraState |= ExtraState.SortComponents;
-                comps[i] = void 0;
-                changed = true;
-            }
-        }
-        if (changed)
-            misc.jsUtil.arrayRemove(comps, void 0);
-    }
-
-    private _handleWillRunnings() {
-        const comps = this._willRunningComponents;
-        let changed = false;
-        for (let i = 0, len = comps.length; i < len; ++i) {
-            const comp = comps[i];
-            lifeCycleHelper.setState(comp, WorldLifeCycleState.Started);
-            comp.onStart?.call(this);
-            
-            this._runningComponents.push(comp);
-            this._extraState |= ExtraState.SortComponents;
-            comps[i] = void 0;
-            changed = true;
-        }
-        if (changed)
-            misc.jsUtil.arrayRemove(comps, void 0);
-    }
-
-    private _handleRunnings(dt: number) {
-        const comps = this._runningComponents;
-        if (this._extraState&ExtraState.SortComponents)
-            comps.sort(worldUtils.componentSorter);
-        let changed = false;
-        for (let i = 0, len = comps.length; i < len; ++i) {
-            const comp = comps[i];
-            if (!comp.enabled) {
-                this._sleepingComponents.push(comp);
-                comps[i] = void 0;
-                changed = true;
-            } else
-                comp.onTick?.call(comp, dt);
-        }
-        if (changed)
-            misc.jsUtil.arrayRemove(comps, void 0);
-    }
-
     private _createComponent(nameOrCtor: string|gFrameworkDef.Constructor<WorldComponent>): WorldComponent {
         const info = worldUtils.getCompInfo(nameOrCtor as any);
         return new info.ctor();
@@ -182,10 +125,7 @@ export class WorldEntity implements IWorldLifeCycle {
 
     private _addComponent(comp: WorldComponent) {
         this._components.push(comp);
-        if (comp.enabled)
-            this._willRunningComponents.push(comp);
-        else
-            this._sleepingComponents.push(comp);
+        this._componentDriver.add(comp);
         comp._internalInit(this);
     }
 

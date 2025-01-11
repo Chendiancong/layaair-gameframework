@@ -16,15 +16,28 @@ export class World {
     }
 
     destroyEntity<T extends WorldEntity>(e: T) {
+        // if (this._id2Entities.get(e.entityId)) {
+        //     misc.jsUtil.arrayRemove(this._entities, e);
+        //     this._id2Entities.delete(e.entityId);
+        //     e._internalPreDestroy();
+        // }
         if (this._id2Entities.get(e.entityId)) {
-            misc.jsUtil.arrayRemove(this._entities, e);
-            this._id2Entities.delete(e.entityId);
-            e._internalDestroy();
+            e._internalPreDestroy();
         }
     }
 
     tick(dt: number) {
         for (let i = 0, len = this._entities.length; i < len; ++i)
             this._entities[i]._internalTick(dt);
+    }
+
+    /**
+     * @deprecated internal
+     */
+    _disposeEntity(e: WorldEntity) {
+        if (this._id2Entities.get(e.entityId)) {
+            misc.jsUtil.arrayRemove(this._entities, e);
+            this._id2Entities.delete(e.entityId);
+        }
     }
 }
