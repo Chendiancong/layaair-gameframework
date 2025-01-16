@@ -71,7 +71,8 @@ export abstract class UIView<Data = any> {
 }
 
 export class UIPanel extends UIView {
-    onOpen?(arg?: any): void;
+    onOpen?(...args: any[]): void;
+    onReopen?(...args: Parameters<this['onOpen']>): void;
     onClose?(): void;
 }
 

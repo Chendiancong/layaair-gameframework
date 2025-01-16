@@ -93,9 +93,9 @@ export class WorldComponent implements IWorldLifeCycle {
      * @deprecated internal
      */
     _enableChanged() {
-        if (lifeCycleHelper.checkState(this, WorldLifeCycleState.Enabled))
-            this.onEnable?.call(this);
-        else
-            this.onDisable?.call(this);
+        // if (lifeCycleHelper.checkState(this, WorldLifeCycleState.Enabled))
+        //     this.onEnable?.call(this);
+        // else
+        //     this.onDisable?.call(this);
     }
 }

@@ -1,3 +1,6 @@
+import { uiHelper } from "../core/UIHelper";
+import { UIPanel } from "../core/UIView";
+
 const { regClass, property } = Laya;
 
 @regClass()
@@ -32,4 +35,8 @@ export class UIExample extends Laya.Script {
 
     //鼠标点击后执行。与交互相关的还有onMouseDown等十多个函数，具体请参阅文档。
     //onMouseClick(): void {}
+}
+
+class MyPanel extends UIPanel {
+
 }

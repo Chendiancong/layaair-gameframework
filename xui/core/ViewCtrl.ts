@@ -19,7 +19,7 @@ export class BaseViewCtrl {
     viewMgr: ViewMgr;
     viewContainer?: Laya.UIComponent;
     viewInfo: ViewRegInfo;
-    openArg?: any;
+    openArgs?: any[];
     view?: UIPanel;
 
     protected _ctrlState = CtrlState.Initial;
@@ -55,11 +55,11 @@ export class BaseViewCtrl {
     _open(...args: any[]) {
         const state = this._ctrlState;
         if (state === CtrlState.Initial) {
-            this.openArg = args[0];
+            this.openArgs = args;
             this._loadView();
         }
         else if (state === CtrlState.Opened)
-            this.view?.onOpen && this.view.onOpen(...args);
+            this.view?.onReopen && this.view.onReopen(...args);
         return this.opened;
     }
 
@@ -109,7 +109,7 @@ export class BaseViewCtrl {
             return;
         this._ctrlState = CtrlState.Opening;
         if (this.view?.onOpen)
-            this.view.onOpen(this.openArg);
+            this.view.onOpen(this.openArgs);
         this._ctrlState = CtrlState.Opened;
         this._openDefer.resolve(this.view);
     }

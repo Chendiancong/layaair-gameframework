@@ -19,7 +19,7 @@ export class ViewMgr {
     }
 
     open<ViewClass extends UIPanel>(viewClass: gFrameworkDef.Constructor<ViewClass>, ...args: ViewClass['onOpen'] extends (..._args: infer R) => any ? R : any): Promise<ViewClass>;
-    open(viewName: string, arg?: any): Promise<UIPanel>;
+    open(viewName: string, ...args: any[]): Promise<UIPanel>;
     open(arg0: string|gFrameworkDef.Constructor<UIPanel>, ...args: any[]): Promise<UIPanel> {
         const viewInfo = uiHelper.getViewInfo(arg0 as any);
         misc.logger.assert(viewInfo != void 0);
