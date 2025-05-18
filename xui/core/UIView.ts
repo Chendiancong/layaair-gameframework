@@ -15,6 +15,9 @@ export abstract class UIView<Data = any> {
         this._node.event('DATA_CHANGED', this._data);
     }
 
+    get asNode() { return this._node; }
+    get asSprite() { return this._node as Laya.Sprite; }
+
     constructor(node: Laya.Node) {
         this._node = node;
     }
@@ -34,6 +37,13 @@ export abstract class UIView<Data = any> {
             else
                 child = this._findChild(pName, this._node);
         }
+    }
+
+    /**
+     * @deprecated internal
+     */
+    _destroySelf(...args: Parameters<Laya.Node["destroy"]>) {
+        this._node.destroy(...args);
     }
 
     isSameData?(cur: Data, other: Data): boolean;

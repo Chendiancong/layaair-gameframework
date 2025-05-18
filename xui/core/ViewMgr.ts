@@ -1,7 +1,7 @@
 import { misc } from "../..";
 import { uiHelper } from "./UIHelper";
 import { UIPanel } from "./UIView";
-import { BaseViewCtrl, ViewCtrl } from "./ViewCtrl";
+import { BaseViewCtrl } from "./ViewCtrl";
 import { BaseViewLayerMgr } from "./ViewLayerMgr";
 
 export class ViewMgr {

@@ -122,9 +122,11 @@ export class BaseViewCtrl {
         if (state === CtrlState.Loading)
             this._ctrlState = CtrlState.Closed;
         else {
-            if (this.view?.onClose)
-                this.view.onClose();
             this._ctrlState = CtrlState.Closed;
+            if (this.view?.onClose) {
+                this.view.onClose();
+                this.view._destroySelf();
+            }
         }
     }
 }

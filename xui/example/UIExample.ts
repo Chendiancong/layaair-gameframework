@@ -1,15 +1,47 @@
 import { uiHelper } from "../core/UIHelper";
 import { UIPanel } from "../core/UIView";
+import { BaseViewLayerMgr, IViewLayerConfig, ViewLayerMgr } from "../core/ViewLayerMgr";
+import { ViewMgr } from "../core/ViewMgr";
 
 const { regClass, property } = Laya;
 
+enum EnumUILayer {
+    Base,
+    Window,
+    Popup,
+    Tips,
+    Count,
+}
+
+class LayerConfig implements IViewLayerConfig<EnumUILayer> {
+    get defaultLayer() { return EnumUILayer.Window; }
+
+    *allLayers() {
+        for (let layer = EnumUILayer.Base; layer < EnumUILayer.Count; ++layer)
+            yield layer;
+    }
+
+    layerToName(layer: EnumUILayer): string {
+        return EnumUILayer[layer];
+    }
+
+    nameToLayer(name: keyof typeof EnumUILayer): EnumUILayer {
+        return EnumUILayer[name];
+    }
+}
+
 @regClass()
 export class UIExample extends Laya.Script {
-    //declare owner : Laya.Sprite3D;
     declare owner : Laya.Sprite;
+    @property({ type: Laya.Button })
+    declare showUIBtn: Laya.Button;
+    private _layerMgr: ViewLayerMgr<EnumUILayer>;
+    private _viewMgr: ViewMgr;
 
     onAwake(): void {
-        
+        this._layerMgr = new ViewLayerMgr(new LayerConfig());
+        this._viewMgr = new ViewMgr(this.owner, this._layerMgr);
+        this.showUIBtn.on(Laya.Event.CLICK, () => this._viewMgr.open(MyPanel, "from UIExample"));
     }
 
     //组件被激活后执行，此时所有节点和组件均已创建完毕，此方法只执行一次
@@ -38,5 +70,7 @@ export class UIExample extends Laya.Script {
 }
 
 class MyPanel extends UIPanel {
-
+    onOpen(msg: string): void {
+        
+    }
 }
