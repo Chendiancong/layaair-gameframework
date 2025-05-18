@@ -1,0 +1,46 @@
+{
+  "_$ver": 1,
+  "_$id": "r4z477u4",
+  "_$type": "Panel",
+  "name": "Panel",
+  "width": 720,
+  "height": 1280,
+  "_mouseState": 2,
+  "left": 0,
+  "right": 0,
+  "top": 0,
+  "bottom": 0,
+  "_$child": [
+    {
+      "_$id": "3r1i2lyn",
+      "_$type": "Image",
+      "name": "Image",
+      "x": 104,
+      "y": 484,
+      "width": 512,
+      "height": 313,
+      "centerX": 0,
+      "centerY": 0,
+      "skin": "res://c13c1b8e-c516-4a0f-98ad-e356f45f0365",
+      "useSourceSize": true,
+      "color": "#ffffff"
+    },
+    {
+      "_$id": "r1il5qsp",
+      "_$type": "Button",
+      "name": "Button",
+      "x": 50,
+      "y": 70,
+      "width": 240,
+      "height": 80,
+      "_mouseState": 2,
+      "skin": "res://d4cfd6a8-0d0a-475b-ac93-d85eaa646936",
+      "sizeGrid": "0,0,0,0,0",
+      "label": "Close",
+      "labelSize": 40,
+      "labelColors": "#000000,#32cc6b,#ff0000",
+      "labelAlign": "center",
+      "labelVAlign": "middle"
+    }
+  ]
+}

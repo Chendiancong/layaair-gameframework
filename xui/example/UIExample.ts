@@ -1,3 +1,4 @@
+import { misc } from "../..";
 import { uiHelper } from "../core/UIHelper";
 import { UIPanel } from "../core/UIView";
 import { BaseViewLayerMgr, IViewLayerConfig, ViewLayerMgr } from "../core/ViewLayerMgr";
@@ -71,6 +72,7 @@ export class UIExample extends Laya.Script {
 
 class MyPanel extends UIPanel {
     onOpen(msg: string): void {
-        
+        Laya.loader.loadPackage
+        misc.logger.log("MyPanel opened with message:", msg);
     }
 }

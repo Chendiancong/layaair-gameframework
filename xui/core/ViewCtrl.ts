@@ -45,8 +45,6 @@ export class BaseViewCtrl {
         misc.logger.assert(!!viewInfo.viewUrl);
         this._loadDefer = new misc.PromiseDeferer();
         this._openDefer = new misc.PromiseDeferer();
-
-        this._loadView();
     }
 
     /**
@@ -59,6 +57,18 @@ export class BaseViewCtrl {
             this._loadView();
         }
         else if (state === CtrlState.Opened)
+            this.view?.onReopen && this.view.onReopen(...args);
+        return this.opened;
+    }
+
+    /**
+     * @deprecated internal
+     */
+    _openWithPrefab(prefab: Laya.Prefab, ...args: any[]) {
+        const state = this._ctrlState;
+        if (state === CtrlState.Initial) {
+            this.openArgs = args;
+        } else if (state === CtrlState.Opened)
             this.view?.onReopen && this.view.onReopen(...args);
         return this.opened;
     }
@@ -88,6 +98,10 @@ export class BaseViewCtrl {
             return;
         }
 
+        this._onViewLoaded(prefab);
+    }
+
+    private _onViewLoaded(prefab: Laya.Prefab) {
         this._ctrlState = CtrlState.Loaded;
         const node = resMgr.instantiate(prefab) as Laya.Sprite;
         const container = this.viewContainer;
@@ -96,7 +110,6 @@ export class BaseViewCtrl {
         container.height = node.height;
         node.pos(0, 0, true);
         container.centerX = container.centerY = 0;
-
         if (!this.view)
             this.view = Reflect.construct(this.viewInfo.viewClazz, [node]) as UIPanel;
         this._loadDefer.resolve(this.view);
