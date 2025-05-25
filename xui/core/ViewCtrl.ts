@@ -121,8 +121,9 @@ export class BaseViewCtrl {
         if (state === CtrlState.Opening || (state !== CtrlState.Loaded && state !== CtrlState.Opened))
             return;
         this._ctrlState = CtrlState.Opening;
+        this.view._internalSetup();
         if (this.view?.onOpen)
-            this.view.onOpen(this.openArgs);
+            this.view.onOpen(...this.openArgs);
         this._ctrlState = CtrlState.Opened;
         this._openDefer.resolve(this.view);
     }

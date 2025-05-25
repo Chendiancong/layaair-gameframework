@@ -65,7 +65,7 @@ export class UIHelper {
             (clazz as any)[this.viewNameKey] = clazz.prototype[this.viewNameKey] = regInfo.viewName;
         }
 
-        prop<T extends Laya.Node>(clazzProto: T, propName: string): void;
+        prop<T extends UIView>(clazzProto: T, propName: string): void;
         prop<T extends IUIPropOption, U extends Laya.Node>(info: IUIPropOption): (clazzProto: U, propName: string) => void;
         prop(arg0: any, arg1?: any): any {
             if (typeof arg1 === 'string')

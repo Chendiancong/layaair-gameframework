@@ -49,6 +49,10 @@ export abstract class UIView<Data = any> {
     isSameData?(cur: Data, other: Data): boolean;
     dataChanged?(): void;
 
+    onClick(target: Laya.Node, handler: () => void, caller?: any) {
+        target.on(Laya.Event.CLICK, caller ?? this, handler);
+    }
+
     protected _findChild(childName: string, node: Laya.Node) {
         return node.getChildByName(childName);
     }

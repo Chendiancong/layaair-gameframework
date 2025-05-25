@@ -130,6 +130,16 @@ export const jsUtil = new class {
 
     createClassRegister<T = any>() { return new ClassRegister<T>(); }
 
+    firstUpper(str: string) {
+        if (!str) return str;
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    firstLower(str: string) {
+        if (!str) return str;
+        return str.charAt(0).toLowerCase() + str.slice(1);
+    }
+
     readonly decorators = new class {
         mixin(ctor: gFrameworkDef.Constructor): (ctor: gFrameworkDef.Constructor) => any;
         mixin(prop: Record<string, any>): (ctor: gFrameworkDef.Constructor) => any;

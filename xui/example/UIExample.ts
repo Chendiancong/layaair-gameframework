@@ -1,7 +1,7 @@
+import { asProp, asView } from "..";
 import { misc } from "../..";
-import { uiHelper } from "../core/UIHelper";
 import { UIPanel } from "../core/UIView";
-import { BaseViewLayerMgr, IViewLayerConfig, ViewLayerMgr } from "../core/ViewLayerMgr";
+import { IViewLayerConfig, ViewLayerMgr } from "../core/ViewLayerMgr";
 import { ViewMgr } from "../core/ViewMgr";
 
 const { regClass, property } = Laya;
@@ -41,7 +41,12 @@ export class UIExample extends Laya.Script {
 
     onAwake(): void {
         this._layerMgr = new ViewLayerMgr(new LayerConfig());
-        this._viewMgr = new ViewMgr(this.owner, this._layerMgr);
+        const root = new Laya.Panel();
+        root.name = "UIRoot";
+        root.left = root.right = root.bottom = root.top = 0;
+        const scene2d = Laya.Scene.root.getChildByName("Scene2D");
+        scene2d.addChild(root);
+        this._viewMgr = new ViewMgr(root, this._layerMgr);
         this.showUIBtn.on(Laya.Event.CLICK, () => this._viewMgr.open(MyPanel, "from UIExample"));
     }
 
@@ -70,9 +75,20 @@ export class UIExample extends Laya.Script {
     //onMouseClick(): void {}
 }
 
+@asView({
+    viewName: "MyPanel",
+    layer: EnumUILayer.Window,
+    viewUrl: "resources/ui/MyPanel.lh"
+})
 class MyPanel extends UIPanel {
+    @asProp
+    closeBtn: Laya.Button;
+
     onOpen(msg: string): void {
-        Laya.loader.loadPackage
         misc.logger.log("MyPanel opened with message:", msg);
+
+        this.onClick(this.closeBtn, () => {
+            misc.logger.log("MyPanel close btn clicked");
+        });
     }
 }
