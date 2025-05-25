@@ -108,6 +108,7 @@ export class ViewRegInfo implements IViewRegOption {
 export interface IUIPropOption {
     path?: string;
     recursive?: boolean;
+    optional?: boolean;
 }
 
 export class UIPropInfo implements IUIPropOption {
@@ -115,6 +116,7 @@ export class UIPropInfo implements IUIPropOption {
     propName: string;
     path?: string;
     recursive?: boolean;
+    optional?: boolean;
 
     constructor(clazzProto: any, propName: string, propInfo?: IUIPropOption) {
         if (propInfo)

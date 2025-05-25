@@ -28,6 +28,7 @@ export class BaseViewCtrl {
 
     get loaded() { return this._loadDefer.promise; }
     get opened() { return this._openDefer.promise; }
+    get isValid() { return this._ctrlState !== CtrlState.Closed; }
 
     constructor(viewMgr: ViewMgr, viewInfo: ViewRegInfo) {
         this.viewInfo = viewInfo;
@@ -35,11 +36,12 @@ export class BaseViewCtrl {
         this.viewMgr = viewMgr;
         const container = this.viewContainer = new Laya.UIComponent();
         container.name = viewInfo.viewName;
-        container.width = container.height = 1;
 
         const layer = viewInfo.layer ?? viewMgr.layerMgr.defaultLayer;
         const layerNode = viewMgr.layerMgr.getLayer(layer);
         misc.logger.assert(!!layerNode);
+        container.left = container.right = container.bottom = container.top = 0;
+        container.mouseThrough = true;
         layerNode.addChild(this.viewContainer);
 
         misc.logger.assert(!!viewInfo.viewUrl);
@@ -103,15 +105,11 @@ export class BaseViewCtrl {
 
     private _onViewLoaded(prefab: Laya.Prefab) {
         this._ctrlState = CtrlState.Loaded;
-        const node = resMgr.instantiate(prefab) as Laya.Sprite;
+        const sprite = resMgr.instantiate(prefab) as Laya.Sprite;
         const container = this.viewContainer;
-        container.addChild(node);
-        container.width = node.width;
-        container.height = node.height;
-        node.pos(0, 0, true);
-        container.centerX = container.centerY = 0;
+        container.addChild(sprite);
         if (!this.view)
-            this.view = Reflect.construct(this.viewInfo.viewClazz, [node]) as UIPanel;
+            this.view = Reflect.construct(this.viewInfo.viewClazz, [sprite]) as UIPanel;
         this._loadDefer.resolve(this.view);
         this._openView();
     }
@@ -121,9 +119,10 @@ export class BaseViewCtrl {
         if (state === CtrlState.Opening || (state !== CtrlState.Loaded && state !== CtrlState.Opened))
             return;
         this._ctrlState = CtrlState.Opening;
+        if (this.view as UIPanel)
+            this.view._setCtrl(this);
         this.view._internalSetup();
-        if (this.view?.onOpen)
-            this.view.onOpen(...this.openArgs);
+        this.view.onOpen?.(...this.openArgs);
         this._ctrlState = CtrlState.Opened;
         this._openDefer.resolve(this.view);
     }
@@ -137,10 +136,9 @@ export class BaseViewCtrl {
             this._ctrlState = CtrlState.Closed;
         else {
             this._ctrlState = CtrlState.Closed;
-            if (this.view?.onClose) {
-                this.view.onClose();
-                this.view._destroySelf();
-            }
+            this.view?.onClose?.();
+            if (layaExtends.isValid(this.viewContainer))
+                this.viewContainer.destroy();
         }
     }
 }

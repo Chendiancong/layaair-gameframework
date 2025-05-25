@@ -1,4 +1,4 @@
-import { asProp, asView } from "..";
+import { xprop, xview } from "..";
 import { misc } from "../..";
 import { UIPanel } from "../core/UIView";
 import { IViewLayerConfig, ViewLayerMgr } from "../core/ViewLayerMgr";
@@ -41,7 +41,7 @@ export class UIExample extends Laya.Script {
 
     onAwake(): void {
         this._layerMgr = new ViewLayerMgr(new LayerConfig());
-        const root = new Laya.Panel();
+        const root = new Laya.UIComponent();
         root.name = "UIRoot";
         root.left = root.right = root.bottom = root.top = 0;
         const scene2d = Laya.Scene.root.getChildByName("Scene2D");
@@ -75,20 +75,25 @@ export class UIExample extends Laya.Script {
     //onMouseClick(): void {}
 }
 
-@asView({
+@xview({
     viewName: "MyPanel",
     layer: EnumUILayer.Window,
     viewUrl: "resources/ui/MyPanel.lh"
 })
 class MyPanel extends UIPanel {
-    @asProp
+    @xprop
     closeBtn: Laya.Button;
 
     onOpen(msg: string): void {
-        misc.logger.log("MyPanel opened with message:", msg);
+        misc.logger.log("MyPanel onOpen:", msg);
 
         this.onClick(this.closeBtn, () => {
-            misc.logger.log("MyPanel close btn clicked");
+            misc.logger.log("MyPanel closeBtn clicked");
+            this.closeSelf();
         });
+    }
+
+    onClose(): void {
+        misc.logger.log("MyPanel onClose");
     }
 }

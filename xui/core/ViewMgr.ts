@@ -17,6 +17,8 @@ export class ViewMgr {
         this._rootNode = rootNode;
         this._layerMgr = layerMgr;
         layerMgr.setup(this);
+
+        rootNode.mouseThrough = true;
     }
 
     open<ViewClass extends UIPanel>(viewClass: gFrameworkDef.Constructor<ViewClass>, ...args: ViewClass['onOpen'] extends (..._args: infer R) => any ? R : any): Promise<ViewClass>;
@@ -26,7 +28,7 @@ export class ViewMgr {
         misc.logger.assert(viewInfo != void 0);
         const viewName = viewInfo.viewName;
         let ctrl = this._viewCtrls[viewName];
-        if (ctrl == void 0) {
+        if (!ctrl?.isValid) {
             ctrl = new BaseViewCtrl(this, viewInfo);
             this._viewCtrls[viewName] = ctrl;
         }

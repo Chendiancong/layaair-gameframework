@@ -1,8 +1,10 @@
+import { misc } from "../..";
 import { layaExtends } from "../../misc";
 import { uiHelper } from "./UIHelper";
+import { BaseViewCtrl, ViewCtrl } from "./ViewCtrl";
 
 export abstract class UIView<Data = any> {
-    protected _node: Laya.Node;
+    protected _sprite: Laya.Sprite;
     protected _data: Data;
 
     get data() { return this._data; }
@@ -12,14 +14,14 @@ export abstract class UIView<Data = any> {
         this._data = val;
         if (this.dataChanged)
             this.dataChanged();
-        this._node.event('DATA_CHANGED', this._data);
+        this._sprite.event('DATA_CHANGED', this._data);
     }
 
-    get asNode() { return this._node; }
-    get asSprite() { return this._node as Laya.Sprite; }
+    get asSprite() { return this._sprite; }
+    get asNode() { return this._sprite as Laya.Node; }
 
-    constructor(node: Laya.Node) {
-        this._node = node;
+    constructor(sprite: Laya.Sprite) {
+        this._sprite = sprite;
     }
 
     /**
@@ -29,13 +31,15 @@ export abstract class UIView<Data = any> {
         const props = uiHelper.getUIProps(this);
         for (const pName in props) {
             const prop = props[pName];
-            let child: Laya.Node;
+            let child: Laya.Sprite = null;
             if (prop.path)
-                child = this._findChildByPath(prop.path, this._node);
+                child = this.findChildByPath(prop.path, this._sprite);
             else if (prop.recursive)
-                child = this._findChildRecursive(pName, this._node);
+                child = this.findChildRecursive(pName, this._sprite);
             else
-                child = this._findChild(pName, this._node);
+                child = this.findChild(pName, this._sprite);
+            misc.logger.assert((!!child || prop.optional));
+            (this as any)[pName] = child;
         }
     }
 
@@ -43,7 +47,9 @@ export abstract class UIView<Data = any> {
      * @deprecated internal
      */
     _destroySelf(...args: Parameters<Laya.Node["destroy"]>) {
-        this._node.destroy(...args);
+        if (!layaExtends.isValid(this._sprite))
+            return;
+        this._sprite.destroy(...args);
     }
 
     isSameData?(cur: Data, other: Data): boolean;
@@ -53,41 +59,77 @@ export abstract class UIView<Data = any> {
         target.on(Laya.Event.CLICK, caller ?? this, handler);
     }
 
-    protected _findChild(childName: string, node: Laya.Node) {
-        return node.getChildByName(childName);
+    protected findChild(childName: string, sprite: Laya.Sprite) {
+        return this._getChildByKey(childName.toLowerCase());
     }
 
-    protected _findChildRecursive(childName: string, node: Laya.Node) {
-        let child = node.getChildByName(childName) ?? void 0;
-        do {
-            if (layaExtends.isValid(child))
-                break;
-            for (let i = 0, len = node.numChildren; i < len; ++i) {
-                child = this._findChildRecursive(childName, node.getChildAt(i));
-                if (layaExtends.isValid(child))
-                    break;
+    protected findChildRecursive(childName: string, sprite: Laya.Sprite) {
+        childName = childName.toLowerCase();
+        const dic = this._getChildDic();
+        let child: Laya.Sprite;
+        for (const k in dic) {
+            const idx = k.search(childName);
+            if (idx >= 0) {
+                if (idx === 0 || idx + childName.length === k.length || k[idx + childName.length] === '.')
+                    child = dic[k];
             }
-        } while (false);
+        }
         return child;
     }
 
-    protected _findChildByPath(path: string, node: Laya.Node) {
-        const pathSections = path.split(/[\/\.\\]/).filter(v => !!v);
-        let cur = node;
-        let target: Laya.Node;
-        for (let i = 0, len = pathSections.length; i < len; ++i) {
-            cur = cur.getChildByName(pathSections[i]);
-            if (i === len - 1)
-                target = cur;
+    protected findChildByPath(path: string, sprite: Laya.Sprite) {
+        const childKey = path.split(/[\/\.\\]/).map(v => v.toLowerCase()).join('.');
+        return this._getChildByKey(childKey);
+    }
+
+    private _getChildByKey(childKey: string) {
+        return this._getChildDic()[childKey];
+    }
+
+    private _uiChildDic: Record<string, Laya.Sprite>;
+    private _getChildDic() {
+        if (!this._uiChildDic) {
+            this._uiChildDic = {};
+            this._parseUI(this._sprite);
         }
-        return target;
+        return this._uiChildDic;
+    }
+
+    private _parseUI(cur: Laya.Sprite, prevKey: string = "") {
+        const dic = this._uiChildDic;
+        for (let i = 0, il = cur.numChildren; i < il; ++i) {
+            const child = cur.getChildAt(i);
+            if (child instanceof Laya.Sprite) {
+                let name = child.name.toLowerCase();
+                if (!name)
+                    name = "defaultsprite";
+                const key = prevKey + name;
+                dic[key] = child;
+                this._parseUI(child, `${key}.`);
+            }
+        }
     }
 }
 
 export class UIPanel extends UIView {
+    private _ctrl: BaseViewCtrl;
+
     onOpen?(...args: any[]): void;
     onReopen?(...args: Parameters<this['onOpen']>): void;
     onClose?(): void;
+
+    get ctrl() { return this._ctrl as ViewCtrl<typeof this>; }
+
+    closeSelf() {
+        this._ctrl._close();
+    }
+
+    /**
+     * @deprecated internal
+     */
+    _setCtrl(ctrl: BaseViewCtrl) {
+        this._ctrl = ctrl;
+    }
 }
 
 export class UIComp extends UIView { }

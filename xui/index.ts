@@ -4,5 +4,5 @@ export { UIView, UIPanel, UIComp } from './core/UIView';
 export { IViewLayerConfig, BaseViewLayerMgr } from "./core/ViewLayerMgr";
 
 const decorators = uiHelper.decorators;
-export const asView = decorators.view.bind(decorators);
-export const asProp = decorators.prop.bind(decorators);
+export const xview = decorators.view.bind(decorators);
+export const xprop = decorators.prop.bind(decorators);

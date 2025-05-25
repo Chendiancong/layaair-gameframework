@@ -26,23 +26,14 @@ export class BaseViewLayerMgr {
         const config = this._config;
         this._layerDic = {};
         for (const layerType of config.allLayers()) {
-            const layerNode = new Laya.Sprite();
+            const layerNode = new Laya.UIComponent();
             layerNode.name = config.layerToName(layerType) ?? `Layer_${layerType}`;
-            rootNode.addChild(layerNode);
             this._layerDic[layerType] = layerNode;
-            layerNode.pos(0, 0);
-            layerNode.size(rootNode.width, rootNode.height);
-        }
+            layaExtends.fullsize(layerNode);
+            rootNode.addChild(layerNode);
 
-        rootNode.on(Laya.Event.RESIZE, () => {
-            for (const layerType of config.allLayers()) {
-                const layerNode = this._layerDic[layerType];
-                if (!layaExtends.isValid(layerNode))
-                    continue;
-                layerNode.pos(0, 0);
-                layerNode.size(rootNode.width, rootNode.height);
-            }
-        });
+            layerNode.mouseThrough = true;
+        }
     }
 
     getLayer(layerType: string|number) {
