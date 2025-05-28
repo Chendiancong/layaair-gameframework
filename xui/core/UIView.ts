@@ -87,15 +87,18 @@ export abstract class UIView<Data = any> {
     }
 
     private _uiChildDic: Record<string, Laya.Sprite>;
+    private _uiTree: UITreeNode
     private _getChildDic() {
         if (!this._uiChildDic) {
             this._uiChildDic = {};
+            this._uiTree = new UITreeNode("__root__");
             this._parseUI(this._sprite);
+            this._parseUI2(this._sprite);
         }
         return this._uiChildDic;
     }
 
-    private _parseUI(cur: Laya.Sprite, prevKey: string = "") {
+    private _parseUI2(cur: Laya.Sprite, prevKey: string = "") {
         const dic = this._uiChildDic;
         for (let i = 0, il = cur.numChildren; i < il; ++i) {
             const child = cur.getChildAt(i);
@@ -105,13 +108,71 @@ export abstract class UIView<Data = any> {
                     name = "defaultsprite";
                 const key = prevKey + name;
                 dic[key] = child;
-                this._parseUI(child, `${key}.`);
+                this._parseUI2(child, `${key}.`);
+            }
+        }
+    }
+
+    private _parseUI(cur: Laya.Sprite, upper?: UITreeNode) {
+        upper = upper ?? this._uiTree;
+        for (let i = 0, il = cur.numChildren; i < il; ++i) {
+            const child = cur.getChildAt(i);
+            if (child instanceof Laya.Sprite) {
+                let name = child.name;
+                if (!name)
+                    continue;
+                const node = new UITreeNode(name);
+                node.sprite = child;
+                this._parseUI(child, node);
             }
         }
     }
 }
 
-export class UIPanel extends UIView {
+class UITreeNode {
+    key: string;
+    children: Record<string, UITreeNode>;
+    sprite: Laya.Sprite;
+
+    constructor(key: string) {
+        this.key = key;
+        this.children = {};
+    }
+
+    search(key: string) {
+        if (this.key === key)
+            return this;
+        if (!this.children)
+            return void 0;
+        let target: UITreeNode;
+        for (const childKey in this.children) {
+            target = this.children[childKey].search(key);
+            if (target != void 0)
+                break;
+        }
+        return target;
+    }
+
+    searchWithPath(path: string) {
+        const sections = path.split(/[\/\.\\]/);
+        return this.internalSearchWithPath(sections);
+    }
+
+    private internalSearchWithPath(sections: string[]) {
+        let target: UITreeNode;
+        while (sections.length) {
+            target = this.search(sections.shift());
+            if (target == void 0)
+                break;
+        }
+        if (sections.length === 0)
+            return target;
+        else
+            return void 0;
+    }
+}
+
+export class UIPanel<Data = any> extends UIView<Data> {
     private _ctrl: BaseViewCtrl;
 
     onOpen?(...args: any[]): void;
