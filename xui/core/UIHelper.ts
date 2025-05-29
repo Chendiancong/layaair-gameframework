@@ -1,5 +1,5 @@
 import { misc } from "../..";
-import { UIView, UIPanel } from "./UIView";
+import { UIView, UIPanel, UIComp } from "./UIView";
 
 export class UIHelper {
     getViewInfo<T extends UIPanel>(clazz: gFrameworkDef.Constructor<T>): ViewRegInfo;
@@ -107,16 +107,16 @@ export class ViewRegInfo implements IViewRegOption {
 
 export interface IUIPropOption {
     path?: string;
-    recursive?: boolean;
     optional?: boolean;
+    type?: typeof UIComp;
 }
 
 export class UIPropInfo implements IUIPropOption {
     clazzProto: any;
     propName: string;
     path?: string;
-    recursive?: boolean;
     optional?: boolean;
+    type?: typeof UIComp;
 
     constructor(clazzProto: any, propName: string, propInfo?: IUIPropOption) {
         if (propInfo)

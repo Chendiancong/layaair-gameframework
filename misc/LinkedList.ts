@@ -23,6 +23,45 @@ export class LinkedList<T> {
 
     unshift(value: T) {
         const newNode = poolMgr.getItem(LinkedListNode<T>);
+        newNode.value = value;
+        const first = this._head.next;
+        this._head.next = newNode;
+        newNode.prev = this._head;
+        newNode.next = first;
+        first.prev = newNode;
+    }
+
+    clear() {
+        let cur = this._head.next;
+        while (cur !== this._tail) {
+            let next = cur.next;
+            poolMgr.pushItem(cur);
+            cur = next;
+        }
+    }
+
+    forEach(handler: (value: T) => void) {
+        for (const value of this.everyValue())
+            handler(value);
+    }
+
+    forEachNode(handler: (node: ILinkedListNode<T>) => void) {
+        for (const node of this.everyNode())
+            handler(node);
+    }
+
+    *everyNode() {
+        let cur = this._head.next;
+        while (cur !== this._tail) {
+            yield cur as ILinkedListNode<T>;
+        }
+    }
+
+    *everyValue() {
+        let cur = this._head.next;
+        while (cur !== this._tail) {
+            yield cur.value
+        }
     }
 }
 
@@ -33,7 +72,7 @@ export interface ILinkedListNode<T> {
 }
 
 @regPool
-export class LinkedListNode<T> implements IPoolable, ILinkedListNode<T> {
+class LinkedListNode<T> implements IPoolable, ILinkedListNode<T> {
     value: T;
     prev: LinkedListNode<T>;
     next: LinkedListNode<T>;
