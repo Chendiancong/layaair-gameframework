@@ -1,9 +1,9 @@
 import { misc } from "../..";
-import { UIView, UIPanel, UIComp } from "./UIView";
+import { UIView, UIPanel, UISubView } from "./UIView";
 
 export class UIHelper {
-    getViewInfo<T extends UIPanel>(clazz: gFrameworkDef.Constructor<T>): ViewRegInfo;
-    getViewInfo<T extends UIPanel>(view: T): ViewRegInfo;
+    getViewInfo<T extends UIView>(clazz: gFrameworkDef.Constructor<T>): ViewRegInfo;
+    getViewInfo<T extends UIView>(view: T): ViewRegInfo;
     getViewInfo(viewName: string): ViewRegInfo;
     getViewInfo(arg0: any): ViewRegInfo {
         if (typeof arg0 === 'string')
@@ -15,9 +15,9 @@ export class UIHelper {
         }
     }
 
-    getViewName<T extends UIPanel>(clazz: gFrameworkDef.Constructor<T>): string;
-    getViewName<T extends UIPanel>(view: T): string;
-    getViewName(clazzOrView: gFrameworkDef.Constructor<UIPanel>|UIPanel): string {
+    getViewName<T extends UIView>(clazz: gFrameworkDef.Constructor<T>): string;
+    getViewName<T extends UIView>(view: T): string;
+    getViewName(clazzOrView: gFrameworkDef.Constructor<UIView>|UIView): string {
         return (clazzOrView as any)[this.decorators.viewNameKey];
     }
 
@@ -36,9 +36,9 @@ export class UIHelper {
 
         private _regInfos = new Map<string, ViewRegInfo>();
 
-        view<T extends UIPanel>(clazz: gFrameworkDef.Constructor<T>): void;
-        view(viewName: string): (clazz: gFrameworkDef.Constructor<UIPanel>) => void;
-        view(regInfo: IViewRegOption): (clazz: gFrameworkDef.Constructor<UIPanel>) => void;
+        view<T extends UIView>(clazz: gFrameworkDef.Constructor<T>): void;
+        view(viewName: string): (clazz: gFrameworkDef.Constructor<UIView>) => void;
+        view(regInfo: IViewRegOption): (clazz: gFrameworkDef.Constructor<UIView>) => void;
         view(arg0: any): any {
             if (typeof arg0 === 'function')
                 this._regView(arg0 as any, { viewName: arg0.name });
@@ -66,7 +66,7 @@ export class UIHelper {
         }
 
         prop<T extends UIView>(clazzProto: T, propName: string): void;
-        prop<T extends IUIPropOption, U extends Laya.Node>(info: IUIPropOption): (clazzProto: U, propName: string) => void;
+        prop<T extends IUIPropOption, U extends UIView>(info: IUIPropOption): (clazzProto: U, propName: string) => void;
         prop(arg0: any, arg1?: any): any {
             if (typeof arg1 === 'string')
                 this._setupPropInfo(arg0, arg1, void 0);
@@ -108,7 +108,7 @@ export class ViewRegInfo implements IViewRegOption {
 export interface IUIPropOption {
     path?: string;
     optional?: boolean;
-    type?: typeof UIComp;
+    type?: (typeof UISubView)|string;
 }
 
 export class UIPropInfo implements IUIPropOption {
@@ -116,7 +116,7 @@ export class UIPropInfo implements IUIPropOption {
     propName: string;
     path?: string;
     optional?: boolean;
-    type?: typeof UIComp;
+    type?: (gFrameworkDef.Constructor<UISubView>)|string;
 
     constructor(clazzProto: any, propName: string, propInfo?: IUIPropOption) {
         if (propInfo)

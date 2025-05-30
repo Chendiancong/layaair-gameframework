@@ -121,8 +121,9 @@ export class BaseViewCtrl {
         this._ctrlState = CtrlState.Opening;
         if (this.view as UIPanel)
             this.view._setCtrl(this);
-        this.view._internalSetup();
+        this.view._internalInit();
         this.view.onOpen?.(...this.openArgs);
+        this.view.refreshView();
         this._ctrlState = CtrlState.Opened;
         this._openDefer.resolve(this.view);
     }

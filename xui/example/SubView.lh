@@ -1,0 +1,39 @@
+{
+  "_$ver": 1,
+  "_$id": "4819kvz8",
+  "_$type": "Box",
+  "name": "SubView",
+  "x": 279,
+  "y": 571,
+  "width": 200,
+  "height": 200,
+  "_mouseState": 2,
+  "_$child": [
+    {
+      "_$id": "lq2f3nqh",
+      "_$type": "Label",
+      "name": "Title",
+      "width": 120,
+      "height": 28,
+      "text": "Label",
+      "fontSize": 28,
+      "color": "#FFFFFF",
+      "valign": "top",
+      "padding": "0,0,0,0"
+    },
+    {
+      "_$id": "jls6y9c8",
+      "_$type": "Button",
+      "name": "InfoButton",
+      "y": 78,
+      "width": 120,
+      "height": 40,
+      "_mouseState": 2,
+      "skin": "res://d4cfd6a8-0d0a-475b-ac93-d85eaa646936",
+      "label": "Title",
+      "labelSize": 20,
+      "labelAlign": "center",
+      "labelVAlign": "middle"
+    }
+  ]
+}

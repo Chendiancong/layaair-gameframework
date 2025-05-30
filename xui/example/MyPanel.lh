@@ -41,6 +41,16 @@
       "labelColors": "#000000,#32cc6b,#ff0000",
       "labelAlign": "center",
       "labelVAlign": "middle"
+    },
+    {
+      "_$id": "rxqf7cui",
+      "_$prefab": "9de6731d-8baa-43e1-a48a-0638e2b4b619",
+      "name": "SubView",
+      "active": true,
+      "x": 0,
+      "y": 256,
+      "visible": true,
+      "left": 0
     }
   ]
 }

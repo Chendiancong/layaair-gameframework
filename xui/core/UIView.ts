@@ -3,9 +3,19 @@ import { layaExtends } from "../../misc";
 import { uiHelper } from "./UIHelper";
 import { BaseViewCtrl, ViewCtrl } from "./ViewCtrl";
 
+const enum InnerViewState {
+    Init,
+    Initing,
+    AfterInit,
+    Uniniting,
+    Disposed
+}
+
 export abstract class UIView<Data = any> {
     protected _sprite: Laya.Sprite;
     protected _data: Data;
+    protected _subViewList: UISubView[] = [];
+    private _innerState = InnerViewState.Init;
 
     get data() { return this._data; }
     set data(val: Data) {
@@ -19,6 +29,7 @@ export abstract class UIView<Data = any> {
 
     get asSprite() { return this._sprite; }
     get asNode() { return this._sprite as Laya.Node; }
+    get isValid() { return layaExtends.isValid(this._sprite); }
 
     constructor(sprite: Laya.Sprite) {
         this._sprite = sprite;
@@ -27,7 +38,10 @@ export abstract class UIView<Data = any> {
     /**
      * @deprecated internal
      */
-    _internalSetup() {
+    _internalInit() {
+        if (this._innerState !== InnerViewState.Init)
+            return;
+        this._innerState = InnerViewState.Initing;
         const props = uiHelper.getUIProps(this);
         for (const pName in props) {
             const prop = props[pName];
@@ -39,31 +53,62 @@ export abstract class UIView<Data = any> {
             misc.logger.assert((!!child || prop.optional));
 
             if (prop.type) {
-                const uicomp = new UIComp(child);
-                uicomp._internalSetup();
-                (this as any)[pName] = uicomp;
+                const viewInfo = uiHelper.getViewInfo(prop.type as any);
+                const ctor = viewInfo.viewClazz;
+                const subView = new ctor(child);
+                subView._internalInit();
+                (this as any)[pName] = subView;
+                this._subViewList.push(subView);
             } else {
                 (this as any)[pName] = child;
             }
-
         }
+        this._innerState = InnerViewState.AfterInit;
+        this.afterInit();
     }
 
     /**
      * @deprecated internal
      */
-    _destroySelf(...args: Parameters<Laya.Node["destroy"]>) {
-        if (!layaExtends.isValid(this._sprite))
+    _internalUninit() {
+        if (this._innerState !== InnerViewState.AfterInit)
             return;
-        this._sprite.destroy(...args);
+        this._innerState = InnerViewState.Uniniting;
+        this.beforeUninit();
+        const subViewList = this._subViewList.concat();
+        subViewList.length = 0;
+        subViewList.forEach(v => v._internalUninit());
+        this._innerState = InnerViewState.Disposed;
+        this.afterUninit();
     }
 
     isSameData?(cur: Data, other: Data): boolean;
     dataChanged?(): void;
 
+    addSubView<T extends UISubView>(clazz: gFrameworkDef.Constructor<T>, target: Laya.Sprite): T;
+    addSubView(className: string, target: Laya.Sprite): UISubView;
+    addSubView(...args: any[]) {
+        const viewInfo = uiHelper.getViewInfo(args[0]);
+        const viewClazz = viewInfo.viewClazz;
+        const uiComp = new viewClazz(args[1]);
+        uiComp._internalInit();
+        this._subViewList.push(uiComp);
+        uiComp.refreshView();
+        return uiComp;
+    }
+
+    /** 内部用于afterInit完成后执行，也可用于在适当的时候主动调用执行刷新ui的逻辑 */
+    refreshView() { }
+
     onClick(target: Laya.Node, handler: () => void, caller?: any) {
         target.on(Laya.Event.CLICK, caller ?? this, handler);
     }
+
+    protected afterInit() { }
+
+    protected beforeUninit() { }
+
+    protected afterUninit() { }
 
     protected findChildRecursive(childName: string) {
         childName = childName.toLowerCase();
@@ -179,4 +224,4 @@ export class UIPanel<Data = any> extends UIView<Data> {
     }
 }
 
-export class UIComp<Data = any> extends UIView<Data> { }
+export class UISubView<Data = any> extends UIView<Data> { }

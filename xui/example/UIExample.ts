@@ -1,6 +1,6 @@
 import { xprop, xview } from "..";
 import { misc } from "../..";
-import { UIPanel } from "../core/UIView";
+import { UISubView, UIPanel, UIView } from "../core/UIView";
 import { IViewLayerConfig, ViewLayerMgr } from "../core/ViewLayerMgr";
 import { ViewMgr } from "../core/ViewMgr";
 
@@ -75,6 +75,19 @@ export class UIExample extends Laya.Script {
     //onMouseClick(): void {}
 }
 
+@xview("MySubView")
+class MySubView extends UISubView {
+    @xprop
+    title: Laya.Label;
+    @xprop
+    infoButton: Laya.Button;
+
+    afterInit(): void {
+        this.title.text = "AfterInit";
+        this.onClick(this.infoButton, () => misc.logger.log("info button"));
+    }
+}
+
 @xview({
     viewName: "MyPanel",
     layer: EnumUILayer.Window,
@@ -83,6 +96,8 @@ export class UIExample extends Laya.Script {
 class MyPanel extends UIPanel {
     @xprop
     closeBtn: Laya.Button;
+    @xprop({ type: MySubView })
+    subView: MySubView;
 
     onOpen(msg: string): void {
         misc.logger.log("MyPanel onOpen:", msg);
@@ -91,6 +106,7 @@ class MyPanel extends UIPanel {
             misc.logger.log("MyPanel closeBtn clicked");
             this.closeSelf();
         });
+        misc.logger.log("subview", this.subView);
     }
 
     onClose(): void {
