@@ -1,5 +1,5 @@
 import { misc } from "../..";
-import { UIView, UIPanel, UISubView } from "./UIView";
+import { UIView, UISubView } from "./UIView";
 
 export class UIHelper {
     getViewInfo<T extends UIView>(clazz: gFrameworkDef.Constructor<T>): ViewRegInfo;
@@ -109,6 +109,7 @@ export interface IUIPropOption {
     path?: string;
     optional?: boolean;
     type?: (typeof UISubView)|string;
+    comps?: Array<(typeof UISubView)|string>
 }
 
 export class UIPropInfo implements IUIPropOption {
@@ -117,6 +118,7 @@ export class UIPropInfo implements IUIPropOption {
     path?: string;
     optional?: boolean;
     type?: (gFrameworkDef.Constructor<UISubView>)|string;
+    comps?: Array<(gFrameworkDef.Constructor<UISubView>)|string>;
 
     constructor(clazzProto: any, propName: string, propInfo?: IUIPropOption) {
         if (propInfo)

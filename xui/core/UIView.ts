@@ -1,5 +1,6 @@
 import { misc } from "../..";
 import { layaExtends } from "../../misc";
+import { UICompMgr } from "./UICompMgr";
 import { uiHelper } from "./UIHelper";
 import { BaseViewCtrl, ViewCtrl } from "./ViewCtrl";
 
@@ -30,6 +31,7 @@ export abstract class UIView<Data = any> {
     get asSprite() { return this._sprite; }
     get asNode() { return this._sprite as Laya.Node; }
     get isValid() { return layaExtends.isValid(this._sprite); }
+    get viewName() { return (this as any)[uiHelper.decorators.viewNameKey] }
 
     constructor(sprite: Laya.Sprite) {
         this._sprite = sprite;
@@ -61,6 +63,12 @@ export abstract class UIView<Data = any> {
                 this._subViewList.push(subView);
             } else {
                 (this as any)[pName] = child;
+            }
+
+            if (prop.comps?.length) {
+                for (const compType of prop.comps) {
+                    UICompMgr.addComp(child, compType as any);
+                }
             }
         }
         this._innerState = InnerViewState.AfterInit;
@@ -104,11 +112,19 @@ export abstract class UIView<Data = any> {
         target.on(Laya.Event.CLICK, caller ?? this, handler);
     }
 
+    setVisible(flag: boolean) {
+        if (!this.isValid)
+            return;
+        this._sprite.visible = flag;
+    }
+
     protected afterInit() { }
 
     protected beforeUninit() { }
 
     protected afterUninit() { }
+
+    protected onVisibleChange(flag: boolean) {}
 
     protected findChildRecursive(childName: string) {
         childName = childName.toLowerCase();

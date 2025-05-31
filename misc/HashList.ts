@@ -1,25 +1,25 @@
 import { ILinkedListNode } from "./LinkedList";
 import { IPoolable, poolMgr, regPool } from "./ObjectPool";
 
-export class HashList<T> {
-    private _head: HashListNode<T>;
-    private _tail: HashListNode<T>;
-    private _keyToNode: Map<string|number, HashListNode<T>>;
+export class HashList<Key, Value> {
+    private _head: HashListNode<Value>;
+    private _tail: HashListNode<Value>;
+    private _keyToNode: Map<Key, HashListNode<Value>>;
 
     constructor() {
-        this._head = new HashListNode<T>();
-        this._tail = new HashListNode<T>();
-        this._keyToNode = new Map<string|number, HashListNode<T>>();
+        this._head = new HashListNode<Value>();
+        this._tail = new HashListNode<Value>();
+        this._keyToNode = new Map<Key, HashListNode<Value>>();
 
         this._head.next = this._tail;
         this._tail.prev = this._head;
     }
 
-    has(key: string|number) {
+    has(key: Key) {
         return !!this._keyToNode.get(key);
     }
 
-    add(key: string|number, value: T) {
+    add(key: Key, value: Value) {
         let cur = this._keyToNode.get(key);
         if (cur != void 0) {
             cur.value = value;
@@ -28,11 +28,11 @@ export class HashList<T> {
         this._internalAdd(key, value);
     }
 
-    delete(key: string|number): boolean {
+    delete(key: Key): boolean {
         return this._internalDelete(key);
     }
 
-    get(key: string|number): T|undefined {
+    get(key: Key): Value|undefined {
         const cur = this._keyToNode.get(key);
         return cur?.value ?? void 0;
     }
@@ -46,6 +46,14 @@ export class HashList<T> {
         }
     }
 
+    forEach(handler: (value: Value) => void) {
+        let cur = this._head.next;
+        while (cur !== this._tail) {
+            handler(cur.value);
+            cur = cur.next;
+        }
+    }
+
     *values() {
         let cur = this._head.next;
         while (cur !== this._tail) {
@@ -54,8 +62,8 @@ export class HashList<T> {
         }
     }
 
-    private _internalAdd(key: string|number, value: T) {
-        const newNode = poolMgr.getItem(HashListNode<T>);
+    private _internalAdd(key: Key, value: Value) {
+        const newNode = poolMgr.getItem(HashListNode<Value>);
         newNode.value = value;
         const last = this._tail.prev;
         last.next = newNode;
@@ -65,7 +73,7 @@ export class HashList<T> {
         this._keyToNode.set(key, newNode);
     }
 
-    private _internalDelete(key: string|number) {
+    private _internalDelete(key: Key) {
         const cur = this._keyToNode.get(key);
         if (cur == void 0)
             return false;

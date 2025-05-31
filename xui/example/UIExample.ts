@@ -1,6 +1,6 @@
-import { xprop, xview } from "..";
+import { asProp, asView } from "..";
 import { misc } from "../..";
-import { UISubView, UIPanel, UIView } from "../core/UIView";
+import { UISubView, UIPanel } from "../core/UIView";
 import { IViewLayerConfig, ViewLayerMgr } from "../core/ViewLayerMgr";
 import { ViewMgr } from "../core/ViewMgr";
 
@@ -75,11 +75,11 @@ export class UIExample extends Laya.Script {
     //onMouseClick(): void {}
 }
 
-@xview("MySubView")
+@asView("MySubView")
 class MySubView extends UISubView {
-    @xprop
+    @asProp
     title: Laya.Label;
-    @xprop
+    @asProp
     infoButton: Laya.Button;
 
     afterInit(): void {
@@ -88,15 +88,28 @@ class MySubView extends UISubView {
     }
 }
 
-@xview({
+@asView("MySubComp")
+class MySubComp extends UISubView {
+    @asProp
+    title: Laya.Label;
+
+    afterInit() {
+        let cnt = 0;
+        this.asSprite.timerLoop(1000, this, () => {
+            this.title.text = `time loop ${++cnt}`
+        });
+    }
+}
+
+@asView({
     viewName: "MyPanel",
     layer: EnumUILayer.Window,
     viewUrl: "resources/ui/MyPanel.lh"
 })
 class MyPanel extends UIPanel {
-    @xprop
+    @asProp
     closeBtn: Laya.Button;
-    @xprop({ type: MySubView })
+    @asProp({ type: MySubView, comps: [MySubComp] })
     subView: MySubView;
 
     onOpen(msg: string): void {

@@ -51,4 +51,8 @@ declare namespace gFrameworkDef {
     interface ITickable {
         tick(dt: number): void;
     }
+
+    interface IDisposable {
+        dispose(): void;
+    }
 }
