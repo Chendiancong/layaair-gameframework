@@ -1,4 +1,4 @@
-import { misc, resMgr } from "../..";
+import { misc, ResMgr } from "../..";
 import { layaExtends } from "../../misc";
 import { ViewRegInfo } from "./UIHelper";
 import { UIPanel } from "./UIView";
@@ -88,7 +88,7 @@ export class BaseViewCtrl {
         this._ctrlState = CtrlState.Loading;
         let prefab: Laya.Prefab;
         try {
-            prefab = await resMgr.load<Laya.Prefab>(this.viewInfo.viewUrl);
+            prefab = await ResMgr.ins.load<Laya.Prefab>(this.viewInfo.viewUrl);
             misc.logger.assert(layaExtends.isValid(prefab));
         } catch (err) {
             this._ctrlState = CtrlState.LoadFail;
@@ -105,7 +105,7 @@ export class BaseViewCtrl {
 
     private _onViewLoaded(prefab: Laya.Prefab) {
         this._ctrlState = CtrlState.Loaded;
-        const sprite = resMgr.instantiate(prefab) as Laya.Sprite;
+        const sprite = ResMgr.ins.instantiate(prefab) as Laya.Sprite;
         const container = this.viewContainer;
         container.addChild(sprite);
         if (!this.view)

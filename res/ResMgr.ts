@@ -1,8 +1,11 @@
-import { myGlobal } from "../misc";
+import { jsUtil, myGlobal } from "../misc";
 import { ResInfo } from "./ResInfo";
-import { ResKeeper } from "./ResKeeper";
+import { ResKeeperComponent } from "./ResKeeper";
 
 export class ResMgr {
+    @jsUtil.decorators.singleTon
+    static ins: ResMgr;
+
     getRes<T extends ResTypes = void>(url: string): T extends void ? any : T;
     getRes<K extends ResTypeKey = 'unknown'>(url: string, type: K): K extends 'unknown' ? any : ResTypeMapping[K];
     getRes(url: string, type: ResTypeKey = 'unknown'): Promise<any> {
@@ -25,7 +28,7 @@ export class ResMgr {
 
     instantiate<T extends Laya.Node = Laya.Node>(res: Laya.Prefab, ...args: Parameters<Laya.Prefab['create']>) {
         const node = res.create(...args);
-        ResKeeper.register(ResInfo.createInfo(res.url, res), node);
+        ResKeeperComponent.register(ResInfo.createInfo(res.url, res), node);
         return node as T;
     }
 }
@@ -52,5 +55,4 @@ type ResTypeMapping = {
 type ResTypeKey = (keyof ResTypeMapping)&(keyof typeof Laya.Loader)|'unknown';
 type ResTypes = ResTypeMapping[keyof ResTypeMapping];
 
-export const resMgr = new ResMgr();
-myGlobal.set('resMgr', resMgr);
+myGlobal.set('ResMgr', ResMgr);

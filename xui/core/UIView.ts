@@ -4,7 +4,7 @@ import { UICompMgr } from "./UICompMgr";
 import { uiHelper } from "./UIHelper";
 import { BaseViewCtrl, ViewCtrl } from "./ViewCtrl";
 
-const enum InnerViewState {
+export const enum InnerViewState {
     Init,
     Initing,
     AfterInit,
@@ -16,15 +16,14 @@ export abstract class UIView<Data = any> {
     protected _sprite: Laya.Sprite;
     protected _data: Data;
     protected _subViewList: UISubView[] = [];
-    private _innerState = InnerViewState.Init;
+    protected _innerState = InnerViewState.Init;
 
     get data() { return this._data; }
     set data(val: Data) {
         if (this.isSameData && this.isSameData(this._data, val))
             return;
         this._data = val;
-        if (this.dataChanged)
-            this.dataChanged();
+        this.onDataChange();
         this._sprite.event('DATA_CHANGED', this._data);
     }
 
@@ -125,6 +124,10 @@ export abstract class UIView<Data = any> {
     protected afterUninit() { }
 
     protected onVisibleChange(flag: boolean) {}
+
+    protected onDataChange() {
+        this.dataChanged?.();
+    }
 
     protected findChildRecursive(childName: string) {
         childName = childName.toLowerCase();

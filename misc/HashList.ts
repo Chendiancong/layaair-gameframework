@@ -2,11 +2,15 @@ import { ILinkedListNode } from "./LinkedList";
 import { IPoolable, poolMgr, regPool } from "./ObjectPool";
 
 export class HashList<Key, Value> {
+    private _size: number;
     private _head: HashListNode<Value>;
     private _tail: HashListNode<Value>;
     private _keyToNode: Map<Key, HashListNode<Value>>;
 
+    get size() { return this._size; }
+
     constructor() {
+        this._size = 0;
         this._head = new HashListNode<Value>();
         this._tail = new HashListNode<Value>();
         this._keyToNode = new Map<Key, HashListNode<Value>>();
@@ -54,12 +58,23 @@ export class HashList<Key, Value> {
         }
     }
 
-    *values() {
+    values() {
+        return this[Symbol.iterator]();
+    }
+
+    *[Symbol.iterator]() {
         let cur = this._head.next;
         while (cur !== this._tail) {
             yield cur.value;
             cur = cur.next;
         }
+    }
+
+    toList() {
+        const list: Value[] = [];
+        for (const value of this)
+            list.push(value);
+        return list;
     }
 
     private _internalAdd(key: Key, value: Value) {
@@ -71,6 +86,7 @@ export class HashList<Key, Value> {
         newNode.next = this._tail;
         this._tail.prev = newNode;
         this._keyToNode.set(key, newNode);
+        this._size++;
     }
 
     private _internalDelete(key: Key) {
@@ -82,6 +98,7 @@ export class HashList<Key, Value> {
         prev.next = next;
         next.prev = prev;
         poolMgr.pushItem(cur);
+        this._size = Math.max(0, this._size - 1);
         return true;
     }
 }

@@ -1,3 +1,4 @@
+import { misc } from "..";
 import { delegatify, IDelegate } from "../misc";
 
 export abstract class ResInfo implements gFrameworkDef.IResInfo {
@@ -29,6 +30,7 @@ export abstract class ResInfo implements gFrameworkDef.IResInfo {
     protected initial() { }
 
     protected onDestroy() {
+        misc.logger.log(`release res: ${this.resUrl}`);
         this.postDestroy.invoke(this);
     }
 
@@ -59,6 +61,7 @@ export class LayaResInfo<T extends Laya.Resource = Laya.Resource> extends ResInf
         this._innerRes?._removeReference(count);
         if (this.refCount <= 0) {
             this._innerRes?.destroy();
+            this._innerRes = void 0;
             this.onDestroy();
         }
     }

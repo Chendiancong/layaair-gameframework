@@ -1,3 +1,6 @@
+import { misc } from "..";
+import { arrayUtil } from "./ArrayUtil";
+
 class ClassInfo<T = any> {
     className: string;
     ctor: gFrameworkDef.Constructor<T>;
@@ -105,7 +108,7 @@ export const jsUtil = new class {
                         Object.getOwnPropertyDescriptor(baseCtor.prototype, name)
                     );
             }
-            if (!mixinCls.includes(baseCtor))
+            if (!arrayUtil.arrayFind(mixinCls, baseCtor))
                 mixinCls.push(baseCtor);
         });
     }
@@ -169,6 +172,44 @@ export const jsUtil = new class {
                     (arg0 as gFrameworkDef.Constructor).constructor.name,
                     arg0
                 );
+        }
+
+        singleTon<T>(create: () => T): (clazzProto: T, propName: string) => void;
+        singleTon<T>(clazz: T, propName: string): void;
+        singleTon(...args: any[]): any {
+            if (!args[0].prototype) {
+                misc.logger.error("singleton can just be used with static field");
+                return;
+            }
+            if (args.length === 1) {
+                return function (clazzProto: any, propName: string) {
+                    const staticKey = `_${propName}`;
+                    const desc: PropertyDescriptor = {
+                        get: function (this: any) {
+                            if (!this[staticKey])
+                                this[staticKey] = args[0]();
+                            return this[staticKey];
+                        },
+                        set: function (_: any) {
+                            misc.logger.error("setter is forbidden");
+                        }
+                    }
+                    return desc as any;
+                }
+            } else {
+                const staticKey = `_${args[1]}`;
+                const desc: PropertyDescriptor = {
+                    get: function (this: any) {
+                        if (!this[staticKey])
+                            this[staticKey] = new args[0];
+                        return this[staticKey];
+                    },
+                    set: function (_: any) {
+                        misc.logger.error("setter is forbidden");
+                    }
+                }
+                return desc as any;
+            }
         }
     }
 }
