@@ -1,4 +1,4 @@
-export const layaExtends = new class {
+class LayaExtends {
     isValid(target: Laya.Node|Laya.Component|Laya.Resource) {
         return target != void 0 && !target.destroyed;
     }
@@ -11,3 +11,5 @@ export const layaExtends = new class {
         comp.centerX = comp.centerY = 0;
     }
 }
+
+export const layaExtends = new LayaExtends();

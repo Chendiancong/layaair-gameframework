@@ -40,7 +40,7 @@ export class BaseViewCtrl {
         const layer = viewInfo.layer ?? viewMgr.layerMgr.defaultLayer;
         const layerNode = viewMgr.layerMgr.getLayer(layer);
         misc.logger.assert(!!layerNode);
-        container.left = container.right = container.bottom = container.top = 0;
+        layaExtends.fullsize(container);
         container.mouseThrough = true;
         layerNode.addChild(this.viewContainer);
 

@@ -1,5 +1,5 @@
 import { misc, ResKeeper, ResMgr } from "../..";
-import { layaExtends } from "../../misc";
+import { jsUtil, layaExtends } from "../../misc";
 import { UICompMgr } from "./UICompMgr";
 import { uiHelper } from "./UIHelper";
 import { BaseViewCtrl, ViewCtrl } from "./ViewCtrl";
@@ -88,6 +88,7 @@ export abstract class UIView<Data = any> {
         subViewList.length = 0;
         subViewList.forEach(v => v._internalUninit());
         this._innerState = InnerViewState.Disposed;
+        this._innerKeeper.dispose();
         this.afterUninit();
     }
 
@@ -120,14 +121,20 @@ export abstract class UIView<Data = any> {
         this.onVisibleChange(flag);
     }
 
+    private readonly _iconUrlVersionKey = "$urlVersion";
     showIconWith(image: Laya.Image, url: string) {
         const cachedRes = this._innerKeeper.getRes<Laya.Texture>(url);
+        const curVer = jsUtil.updateVersion(image, this._iconUrlVersionKey);
         if (layaExtends.isValid(cachedRes))
             image.texture = cachedRes;
         else {
             ResMgr.ins.load(url)
                 .then(resInfo => {
-                    
+                    this._innerKeeper.addResRef(resInfo);
+                    if (curVer === jsUtil.curVersion(image, this._iconUrlVersionKey))
+                        image.texture = resInfo.getRes();
+                    else
+                        this._innerKeeper.decResRef(url);
                 });
         }
     }

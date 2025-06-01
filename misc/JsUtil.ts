@@ -1,50 +1,7 @@
 import { misc } from "..";
 import { arrayUtil } from "./ArrayUtil";
 
-class ClassInfo<T = any> {
-    className: string;
-    ctor: gFrameworkDef.Constructor<T>;
-
-    constructor(className: string, ctor: gFrameworkDef.Constructor<T>) {
-        this.className = className;
-        this.ctor = ctor;
-    }
-
-    createIns(...args: gFrameworkDef.ConstructorParameters<gFrameworkDef.Constructor<T>>) {
-        return new this.ctor(...args);
-    }
-}
-
-class ClassRegister<T = any> {
-    private _classInfos: Record<string, ClassInfo<T>> = {};
-
-    setClass(className: string, ctor: gFrameworkDef.Constructor<T>) {
-        const info = this._classInfos[className] = new ClassInfo<T>(
-            className, ctor
-        );
-        return info;
-    }
-
-    getClassByName(className: string) {
-        return this._classInfos[className];
-    }
-
-    getClassName(ctor: gFrameworkDef.Constructor<T>) {
-        for (const k in this._classInfos) {
-            const info = this._classInfos[k];
-            if (info.ctor === ctor)
-                return k;
-        }
-        return void 0;
-    }
-
-    createIns(className: string, ...args: gFrameworkDef.ConstructorParameters<gFrameworkDef.Constructor<T>>) {
-        const info = this._classInfos[className];
-        return info?.createIns(...args) ?? void 0;
-    }
-}
-
-export const jsUtil = new class {
+class JsUtil {
     readonly mixinTag = '$mixinCls';
     readonly staticMixinTag = '$staticMixinCls';
     readonly classRegger = new ClassRegister();
@@ -133,6 +90,25 @@ export const jsUtil = new class {
 
     createClassRegister<T = any>() { return new ClassRegister<T>(); }
 
+    private readonly _versionRoot = "$localVersionRoot";
+    versionInfo(target: any, versionkey: string) {
+        let localVersions = Reflect.get(target, this._versionRoot);
+        if (!localVersions)
+            Reflect.set(target, this._versionRoot, localVersions = {});
+        let version: LocalVersion = localVersions[versionkey];
+        if (!version)
+            localVersions[versionkey] = version = new LocalVersion();
+        return version;
+    }
+
+    updateVersion(target: any, versionkey: string) {
+        return this.versionInfo(target, versionkey).update();
+    }
+
+    curVersion(target: any, versionkey: string) {
+        return this.versionInfo(target, versionkey).cur;
+    }
+
     readonly decorators = new class {
         mixin(ctor: gFrameworkDef.Constructor): (ctor: gFrameworkDef.Constructor) => any;
         mixin(prop: Record<string, any>): (ctor: gFrameworkDef.Constructor) => any;
@@ -213,3 +189,60 @@ export const jsUtil = new class {
         }
     }
 }
+
+// #region definitions
+class ClassInfo<T = any> {
+    className: string;
+    ctor: gFrameworkDef.Constructor<T>;
+
+    constructor(className: string, ctor: gFrameworkDef.Constructor<T>) {
+        this.className = className;
+        this.ctor = ctor;
+    }
+
+    createIns(...args: gFrameworkDef.ConstructorParameters<gFrameworkDef.Constructor<T>>) {
+        return new this.ctor(...args);
+    }
+}
+
+class ClassRegister<T = any> {
+    private _classInfos: Record<string, ClassInfo<T>> = {};
+
+    setClass(className: string, ctor: gFrameworkDef.Constructor<T>) {
+        const info = this._classInfos[className] = new ClassInfo<T>(
+            className, ctor
+        );
+        return info;
+    }
+
+    getClassByName(className: string) {
+        return this._classInfos[className];
+    }
+
+    getClassName(ctor: gFrameworkDef.Constructor<T>) {
+        for (const k in this._classInfos) {
+            const info = this._classInfos[k];
+            if (info.ctor === ctor)
+                return k;
+        }
+        return void 0;
+    }
+
+    createIns(className: string, ...args: gFrameworkDef.ConstructorParameters<gFrameworkDef.Constructor<T>>) {
+        const info = this._classInfos[className];
+        return info?.createIns(...args) ?? void 0;
+    }
+}
+
+class LocalVersion {
+    private _cur = 0;
+
+    get cur() { return this._cur; }
+
+    update() {
+        return this._cur++;
+    }
+}
+// #endregion
+
+export const jsUtil = new JsUtil();
