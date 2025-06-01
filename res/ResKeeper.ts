@@ -32,6 +32,10 @@ export class ResKeeper implements IResKeeper {
             this._resInfos.delete(resUrl);
     }
 
+    getRes<T>(resUrl: string) {
+        return this._resInfos.get(resUrl)?.getRes<T>();
+    }
+
     dispose() {
         if (this._resInfos.size) {
             const list = this._resInfos.toList();

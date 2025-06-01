@@ -1,4 +1,4 @@
-import { misc } from "../..";
+import { misc, ResKeeper, ResMgr } from "../..";
 import { layaExtends } from "../../misc";
 import { UICompMgr } from "./UICompMgr";
 import { uiHelper } from "./UIHelper";
@@ -17,6 +17,7 @@ export abstract class UIView<Data = any> {
     protected _data: Data;
     protected _subViewList: UISubView[] = [];
     protected _innerState = InnerViewState.Init;
+    protected _innerKeeper: ResKeeper;
 
     get data() { return this._data; }
     set data(val: Data) {
@@ -34,6 +35,7 @@ export abstract class UIView<Data = any> {
 
     constructor(sprite: Laya.Sprite) {
         this._sprite = sprite;
+        this._innerKeeper = new ResKeeper();
     }
 
     /**
@@ -115,6 +117,19 @@ export abstract class UIView<Data = any> {
         if (!this.isValid)
             return;
         this._sprite.visible = flag;
+        this.onVisibleChange(flag);
+    }
+
+    showIconWith(image: Laya.Image, url: string) {
+        const cachedRes = this._innerKeeper.getRes<Laya.Texture>(url);
+        if (layaExtends.isValid(cachedRes))
+            image.texture = cachedRes;
+        else {
+            ResMgr.ins.load(url)
+                .then(resInfo => {
+                    
+                });
+        }
     }
 
     protected afterInit() { }

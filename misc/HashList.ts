@@ -93,6 +93,7 @@ export class HashList<Key, Value> {
         const cur = this._keyToNode.get(key);
         if (cur == void 0)
             return false;
+        this._keyToNode.delete(key);
         const next = cur.next;
         const prev = cur.prev;
         prev.next = next;

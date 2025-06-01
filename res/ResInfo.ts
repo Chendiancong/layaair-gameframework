@@ -1,5 +1,5 @@
-import { misc } from "..";
 import { delegatify, IDelegate } from "../misc";
+import { ResCache } from "./ResCache";
 
 export abstract class ResInfo implements gFrameworkDef.IResInfo {
     protected _innerRes: any;
@@ -25,12 +25,13 @@ export abstract class ResInfo implements gFrameworkDef.IResInfo {
     protected constructor(url: string, res: any) {
         this.resUrl = url;
         this._innerRes = res;
+        ResCache.ins.addRes(this);
     }
 
     protected initial() { }
 
     protected onDestroy() {
-        misc.logger.log(`release res: ${this.resUrl}`);
+        ResCache.ins.removeRes(this);
         this.postDestroy.invoke(this);
     }
 

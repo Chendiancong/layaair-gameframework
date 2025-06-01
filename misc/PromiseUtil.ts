@@ -2,6 +2,11 @@ export const promiseUtil = new class {
     createDefer<T>() {
         return new PromiseDeferer<T>();
     }
+
+    async listPromisify<Value, Result = any>(list: Value[], handler: (v: Value) => Promise<Result>): Promise<Result[]> {
+        const tasks = list.map(v => handler(v));
+        return await Promise.all(tasks);
+    }
 }
 
 export class PromiseDeferer<T = void> {

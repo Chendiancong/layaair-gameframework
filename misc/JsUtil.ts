@@ -108,7 +108,7 @@ export const jsUtil = new class {
                         Object.getOwnPropertyDescriptor(baseCtor.prototype, name)
                     );
             }
-            if (!arrayUtil.arrayFind(mixinCls, baseCtor))
+            if (!arrayUtil.find(mixinCls, baseCtor))
                 mixinCls.push(baseCtor);
         });
     }
@@ -174,9 +174,9 @@ export const jsUtil = new class {
                 );
         }
 
-        singleTon<T>(create: () => T): (clazzProto: T, propName: string) => void;
-        singleTon<T>(clazz: T, propName: string): void;
-        singleTon(...args: any[]): any {
+        singleton<T>(create: () => T): (clazzProto: T, propName: string) => void;
+        singleton<T>(clazz: T, propName: string): void;
+        singleton(...args: any[]): any {
             if (!args[0].prototype) {
                 misc.logger.error("singleton can just be used with static field");
                 return;

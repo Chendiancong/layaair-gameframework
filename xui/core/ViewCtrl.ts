@@ -86,26 +86,26 @@ export class BaseViewCtrl {
         if (this._ctrlState !== CtrlState.Initial)
             return;
         this._ctrlState = CtrlState.Loading;
-        let prefab: Laya.Prefab;
+        let resInfo: gFrameworkDef.IGenericResInfo<Laya.Prefab>;
         try {
-            prefab = await ResMgr.ins.load<Laya.Prefab>(this.viewInfo.viewUrl);
-            misc.logger.assert(layaExtends.isValid(prefab));
+            resInfo = await ResMgr.ins.load<Laya.Prefab>(this.viewInfo.viewUrl);
+            misc.logger.assert(layaExtends.isValid(resInfo.res));
         } catch (err) {
             this._ctrlState = CtrlState.LoadFail;
             throw err;
         }
 
         if (this._ctrlState as number === CtrlState.Closed) {
-            prefab._removeReference();
+            resInfo.decRef();
             return;
         }
 
-        this._onViewLoaded(prefab);
+        this._onViewLoaded(resInfo);
     }
 
-    private _onViewLoaded(prefab: Laya.Prefab) {
+    private _onViewLoaded(resInfo: gFrameworkDef.IGenericResInfo<Laya.Prefab>) {
         this._ctrlState = CtrlState.Loaded;
-        const sprite = ResMgr.ins.instantiate(prefab) as Laya.Sprite;
+        const sprite = ResMgr.ins.instantiate<Laya.Sprite>(resInfo);
         const container = this.viewContainer;
         container.addChild(sprite);
         if (!this.view)
