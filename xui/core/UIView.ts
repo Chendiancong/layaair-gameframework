@@ -1,7 +1,8 @@
 import { misc, ResKeeper, ResMgr } from "../..";
 import { jsUtil, layaExtends } from "../../misc";
 import { UICompMgr } from "./UICompMgr";
-import { uiHelper } from "./UIHelper";
+import { UIDecorator, UIHelper } from "./UIHelper";
+import { IUITreeNode, UIParser } from "./UIParser";
 import { BaseViewCtrl, ViewCtrl } from "./ViewCtrl";
 
 export const enum InnerViewState {
@@ -31,7 +32,7 @@ export abstract class UIView<Data = any> {
     get asSprite() { return this._sprite; }
     get asNode() { return this._sprite as Laya.Node; }
     get isValid() { return layaExtends.isValid(this._sprite); }
-    get viewName() { return (this as any)[uiHelper.decorators.viewNameKey] }
+    get viewName() { return (this as any)[UIDecorator.ins.viewNameKey] }
 
     constructor(sprite: Laya.Sprite) {
         this._sprite = sprite;
@@ -45,7 +46,7 @@ export abstract class UIView<Data = any> {
         if (this._innerState !== InnerViewState.Init)
             return;
         this._innerState = InnerViewState.Initing;
-        const props = uiHelper.getUIProps(this);
+        const props = UIHelper.ins.getUIProps(this);
         for (const pName in props) {
             const prop = props[pName];
             let child: Laya.Sprite = null;
@@ -53,10 +54,10 @@ export abstract class UIView<Data = any> {
                 child = this.findChildByPath(prop.path);
             else
                 child = this.findChildRecursive(pName);
-            misc.logger.assert((!!child || prop.optional));
+            misc.logger.assert((!!child || prop.optional), pName);
 
             if (prop.type) {
-                const viewInfo = uiHelper.getViewInfo(prop.type as any);
+                const viewInfo = UIHelper.ins.getViewInfo(prop.type as any);
                 const ctor = viewInfo.viewClazz;
                 const subView = new ctor(child);
                 subView._internalInit();
@@ -68,7 +69,8 @@ export abstract class UIView<Data = any> {
 
             if (prop.comps?.length) {
                 for (const compType of prop.comps) {
-                    UICompMgr.addComp(child, compType as any);
+                    const subView = UICompMgr.addComp(child, compType as any);
+                    this._subViewList.push(subView);
                 }
             }
         }
@@ -85,7 +87,7 @@ export abstract class UIView<Data = any> {
         this._innerState = InnerViewState.Uniniting;
         this.beforeUninit();
         const subViewList = this._subViewList.concat();
-        subViewList.length = 0;
+        this._subViewList.length = 0;
         subViewList.forEach(v => v._internalUninit());
         this._innerState = InnerViewState.Disposed;
         this._innerKeeper.dispose();
@@ -98,7 +100,7 @@ export abstract class UIView<Data = any> {
     addSubView<T extends UISubView>(clazz: gFrameworkDef.Constructor<T>, target: Laya.Sprite): T;
     addSubView(className: string, target: Laya.Sprite): UISubView;
     addSubView(...args: any[]) {
-        const viewInfo = uiHelper.getViewInfo(args[0]);
+        const viewInfo = UIHelper.ins.getViewInfo(args[0]);
         const viewClazz = viewInfo.viewClazz;
         const uiComp = new viewClazz(args[1]);
         uiComp._internalInit();
@@ -132,7 +134,7 @@ export abstract class UIView<Data = any> {
                 .then(resInfo => {
                     this._innerKeeper.addResRef(resInfo);
                     if (curVer === jsUtil.curVersion(image, this._iconUrlVersionKey))
-                        image.texture = resInfo.getRes();
+                        image.skin = resInfo.resUrl;
                     else
                         this._innerKeeper.decResRef(url);
                 });
@@ -151,96 +153,29 @@ export abstract class UIView<Data = any> {
         this.dataChanged?.();
     }
 
+    protected _uiTree: IUITreeNode;
+    protected parseUI() {
+        if (!this._uiTree) {
+            this._uiTree = UIParser.ins.parseUI(this._sprite);
+
+            // collect image resource usage
+            
+        }
+        return this._uiTree;
+    }
+
     protected findChildRecursive(childName: string) {
         childName = childName.toLowerCase();
-        const tree = this._getUITree();
+        const tree = this.parseUI();
         const treeNode = tree.search(childName);
         return treeNode?.sprite ?? void 0;
     }
 
     protected findChildByPath(path: string) {
         path = path.toLowerCase();
-        const tree = this._getUITree();
+        const tree = this.parseUI();
         const treeNode = tree.searchWithPath(path);
         return treeNode?.sprite ?? void 0;
-    }
-
-    private _uiTree: UITreeNode
-    private _getUITree() {
-        if (!this._uiTree) {
-            this._uiTree = new UITreeNode("__root__");
-            this._parseUI(this._sprite, this._uiTree);
-        }
-        return this._uiTree;
-    }
-
-    private _parseUI(cur: Laya.Sprite, upper?: UITreeNode) {
-        upper = upper ?? this._uiTree;
-        for (let i = 0, il = cur.numChildren; i < il; ++i) {
-            const child = cur.getChildAt(i);
-            if (child instanceof Laya.Sprite) {
-                let name = child.name;
-                if (!name)
-                    continue;
-                const node = new UITreeNode(name.toLowerCase());
-                node.sprite = child;
-                upper.addChild(node);
-                this._parseUI(child, node);
-            }
-        }
-    }
-}
-
-class UITreeNode {
-    key: string;
-    children: Record<string, UITreeNode>;
-    sprite: Laya.Sprite;
-
-    constructor(key: string) {
-        this.key = key;
-        this.children = {};
-    }
-
-    addChild(node: UITreeNode) {
-        this.children[node.key] = node;
-    }
-
-    search(key: string) {
-        if (this.key === key)
-            return this;
-        if (!this.children)
-            return void 0;
-        let target: UITreeNode;
-        outer: do {
-            const child = this.children[key];
-            if (child != void 0) {
-                target = child;
-                break;
-            }
-            for (const childKey in this.children) {
-                target = this.children[childKey].search(key);
-                if (target != void 0)
-                    break outer;
-            }
-        } while (false);
-
-        return target;
-    }
-
-    searchWithPath(path: string) {
-        const sections = path.split(/[\/\.\\]/);
-        return this.internalSearchWithPath(sections);
-    }
-
-    private internalSearchWithPath(sections: string[]) {
-        let cur = this as UITreeNode;
-        for (let i = 0, il = sections.length; i < il; ++i) {
-            const section = sections[i];
-            cur = cur.search(section);
-            if (!cur)
-                break;
-        }
-        return cur;
     }
 }
 

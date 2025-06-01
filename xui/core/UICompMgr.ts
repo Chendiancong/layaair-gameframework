@@ -1,4 +1,4 @@
-import { uiHelper } from "./UIHelper";
+import { UIHelper } from "./UIHelper";
 import { UISubView } from "./UIView";
 
 export class UICompMgr implements gFrameworkDef.IDisposable {
@@ -22,7 +22,7 @@ export class UICompMgr implements gFrameworkDef.IDisposable {
     addComp<T extends UISubView>(clazz: gFrameworkDef.Constructor<UISubView>): T;
     addComp<T extends UISubView = UISubView>(className: string): T;
     addComp(arg0: any): UISubView {
-        const viewInfo = uiHelper.getViewInfo(arg0);
+        const viewInfo = UIHelper.ins.getViewInfo(arg0);
         const comp = new viewInfo.viewClazz(this._sprite);
         this._compList.push(comp);
         comp._internalInit();
@@ -32,7 +32,7 @@ export class UICompMgr implements gFrameworkDef.IDisposable {
     getComp<T extends UISubView>(clazz: gFrameworkDef.Constructor<UISubView>): T;
     getComp<T extends UISubView = UISubView>(className: string): T;
     getComp(arg0: any): UISubView {
-        const viewInfo = uiHelper.getViewInfo(arg0 as any);
+        const viewInfo = UIHelper.ins.getViewInfo(arg0 as any);
         const comp = this._compList.find(v => v.viewName === viewInfo.viewName);
         return comp ?? void 0;
     }

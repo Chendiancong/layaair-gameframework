@@ -42,6 +42,7 @@ export class HashList<Key, Value> {
     }
 
     clear() {
+        this._size = 0;
         let cur = this._head.next;
         while (cur !== this._tail) {
             let next = cur.next;

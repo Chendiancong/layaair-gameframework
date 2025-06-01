@@ -4,6 +4,7 @@ import { ResCache } from "./ResCache";
 export abstract class ResInfo implements gFrameworkDef.IResInfo {
     protected _innerRes: any;
     protected _refCount: number = 0;
+    protected _isDestroyed: boolean = false;
     resUrl: string;
     @delegatify
     postDestroy: IDelegate<(resInfo: gFrameworkDef.IResInfo) => void>;
@@ -33,6 +34,7 @@ export abstract class ResInfo implements gFrameworkDef.IResInfo {
     protected initial() { }
 
     protected onDestroy() {
+        this._isDestroyed = true;
         ResCache.ins.removeRes(this);
         this.postDestroy.invoke(this);
     }
@@ -40,22 +42,27 @@ export abstract class ResInfo implements gFrameworkDef.IResInfo {
     getRes<T>(): T {
         return this._innerRes as T;
     }
+
+    dispose() {
+        this._innerRes = void 0;
+    }
 }
 
 export class LayaResInfo<T extends Laya.Resource = Laya.Resource> extends ResInfo implements gFrameworkDef.IGenericResInfo<T> {
     declare protected _innerRes: T;
 
     get isValid() {
-        return !!this._innerRes && !this._innerRes.destroyed;
+        return !!this._innerRes && !this._innerRes.destroyed && !this._isDestroyed;
     }
     get res() {
         return this._innerRes;
     }
 
     addRef(count: number = 1): void {
-        if (this._refCount === 0)
+        if (this._refCount === 0) {
             // 只记录一次引用
-            this._innerRes?._addReference();
+            this._innerRes._addReference();
+        }
         this._refCount += count;
     }
 
@@ -63,10 +70,6 @@ export class LayaResInfo<T extends Laya.Resource = Laya.Resource> extends ResInf
         this._refCount = Math.max(0, this._refCount - count);
         if (this._refCount <= 0) {
             this._innerRes._removeReference();
-            if (this._innerRes.referenceCount <= 0) {
-                Laya.loader.clearRes(this.resUrl);
-            }
-            this._innerRes = void 0;
             this.onDestroy();
         }
     }
@@ -74,7 +77,7 @@ export class LayaResInfo<T extends Laya.Resource = Laya.Resource> extends ResInf
 
 export class CustomResInfo extends ResInfo {
 
-    get isValid() { return !!this._innerRes; }
+    get isValid() { return !!this._innerRes && !this._isDestroyed; }
 
     addRef(count: number = 1): void {
         this._refCount += count;
@@ -83,7 +86,6 @@ export class CustomResInfo extends ResInfo {
     decRef(count: number = 1): void {
         this._refCount = Math.max(0, this._refCount - count);
         if (this._refCount <= 0) {
-            this._innerRes = void 0;
             this.onDestroy();
         }
     }

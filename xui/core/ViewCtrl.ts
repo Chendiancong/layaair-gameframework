@@ -137,6 +137,7 @@ export class BaseViewCtrl {
             this._ctrlState = CtrlState.Closed;
         else {
             this._ctrlState = CtrlState.Closed;
+            this.view?._internalUninit();
             this.view?.onClose?.();
             if (layaExtends.isValid(this.viewContainer))
                 this.viewContainer.destroy();

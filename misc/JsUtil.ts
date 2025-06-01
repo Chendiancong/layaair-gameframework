@@ -240,7 +240,7 @@ class LocalVersion {
     get cur() { return this._cur; }
 
     update() {
-        return this._cur++;
+        return ++this._cur;
     }
 }
 // #endregion

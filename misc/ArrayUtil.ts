@@ -15,4 +15,9 @@ export const arrayUtil = new class {
         }
         arr.length = j;
     }
+
+    append<T>(arr: T[], toAdd: T[]) {
+        for (let i = 0, il = toAdd.length; i < il; ++i)
+            arr.push(toAdd[i]);
+    }
 }

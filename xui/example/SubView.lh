@@ -25,15 +25,30 @@
       "_$id": "jls6y9c8",
       "_$type": "Button",
       "name": "InfoButton",
-      "y": 78,
+      "y": 80,
       "width": 120,
       "height": 40,
       "_mouseState": 2,
+      "centerY": 0,
       "skin": "res://d4cfd6a8-0d0a-475b-ac93-d85eaa646936",
       "label": "Title",
       "labelSize": 20,
       "labelAlign": "center",
       "labelVAlign": "middle"
+    },
+    {
+      "_$id": "h6zrettd",
+      "_$type": "Image",
+      "name": "Image",
+      "x": 140,
+      "y": 53,
+      "width": 512,
+      "height": 313,
+      "scaleX": 0.3,
+      "scaleY": 0.3,
+      "centerY": 0,
+      "skin": "res://c13c1b8e-c516-4a0f-98ad-e356f45f0365",
+      "color": "#ffffff"
     }
   ]
 }

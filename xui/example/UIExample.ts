@@ -92,11 +92,16 @@ class MySubView extends UISubView {
 class MySubComp extends UISubView {
     @asProp
     title: Laya.Label;
+    @asProp
+    image: Laya.Image;
 
     afterInit() {
         let cnt = 0;
         this.asSprite.timerLoop(1000, this, () => {
             this.title.text = `time loop ${++cnt}`
+            if (cnt === 3) {
+                this.showIconWith(this.image, "resources/layaAir.png")
+            }
         });
     }
 }
