@@ -1,4 +1,4 @@
-import { misc, ResKeeper, ResMgr } from "../..";
+import { misc, ResInfo, ResKeeper, ResMgr } from "../..";
 import { jsUtil, layaExtends } from "../../misc";
 import { UICompMgr } from "./UICompMgr";
 import { UIDecorator, UIHelper } from "./UIHelper";
@@ -123,22 +123,9 @@ export abstract class UIView<Data = any> {
         this.onVisibleChange(flag);
     }
 
-    private readonly _iconUrlVersionKey = "$urlVersion";
+    /** 留坑，用来适配本地资源和远程资源的加载 */
     showIconWith(image: Laya.Image, url: string) {
-        const cachedRes = this._innerKeeper.getRes<Laya.Texture>(url);
-        const curVer = jsUtil.updateVersion(image, this._iconUrlVersionKey);
-        if (layaExtends.isValid(cachedRes))
-            image.texture = cachedRes;
-        else {
-            ResMgr.ins.load(url)
-                .then(resInfo => {
-                    this._innerKeeper.addResRef(resInfo);
-                    if (curVer === jsUtil.curVersion(image, this._iconUrlVersionKey))
-                        image.skin = resInfo.resUrl;
-                    else
-                        this._innerKeeper.decResRef(url);
-                });
-        }
+        image.skin = url;
     }
 
     protected afterInit() { }
@@ -157,9 +144,6 @@ export abstract class UIView<Data = any> {
     protected parseUI() {
         if (!this._uiTree) {
             this._uiTree = UIParser.ins.parseUI(this._sprite);
-
-            // collect image resource usage
-            
         }
         return this._uiTree;
     }

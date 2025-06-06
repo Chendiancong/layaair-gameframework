@@ -43,12 +43,15 @@ export class HashList<Key, Value> {
 
     clear() {
         this._size = 0;
+        this._keyToNode.clear();
         let cur = this._head.next;
         while (cur !== this._tail) {
             let next = cur.next;
             poolMgr.pushItem(cur);
             cur = next;
         }
+        this._head.next = this._tail;
+        this._tail.prev = this._head;
     }
 
     forEach(handler: (value: Value) => void) {

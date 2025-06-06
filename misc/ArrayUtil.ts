@@ -6,6 +6,10 @@ export const arrayUtil = new class {
         }
     }
 
+    includes<T>(arr: T[], target: T): boolean {
+        return !!this.find(arr, target);
+    }
+
     /** 原地删除元素 */
     remove<T>(arr: T[], target: T) {
         let i = 0, j = 0, len = arr.length;

@@ -7,6 +7,13 @@ export const promiseUtil = new class {
         const tasks = list.map(v => handler(v));
         return await Promise.all(tasks);
     }
+
+    async sequence<T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: Awaited<T[P]> }> {
+        let results: any[] = [];
+        for (const v of values)
+            results.push(await v);
+        return results as any;
+    }
 }
 
 export class PromiseDeferer<T = void> {

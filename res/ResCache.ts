@@ -21,11 +21,6 @@ export class ResCache {
     }
 
     removeRes(res: gFrameworkDef.IResInfo) {
-        // if (this.cachedRes.has(res.resUrl)) {
-        //     // this.cachedRes.delete(res.resUrl);
-        //     // misc.logger.log(`Release res cache:${res.resUrl}`);
-        //     const cur = this.cachedRes.get()
-        // }
         const resInfo = this.cachedRes.get(res.resUrl);
         if (!!resInfo) {
             this.cachedRes.delete(res.resUrl);

@@ -1,4 +1,5 @@
 import { misc } from "..";
+import { arrayUtil } from "../misc";
 import { type World } from "./World";
 import { WorldComponent } from "./WorldComponent";
 import { createDriver } from "./WorldComponentDriver";
@@ -50,14 +51,14 @@ export class WorldEntity implements IWorldLifeCycle {
             this._addComponent(comp);
         } else {
             comp = arg0 as any;
-            if (!this._components.includes(comp))
+            if (!arrayUtil.includes(this._components, comp))
                 this._addComponent(comp);
         }
         return comp;
     }
 
     removeComponent<T extends WorldComponent>(comp: T) {
-        if (this._components.includes(comp)) {
+        if (arrayUtil.includes(this._components, comp)) {
             misc.jsUtil.arrayRemove(this._components, comp);
             this._componentDriver.delete(comp);
             comp._internalDestroy();
